@@ -57,6 +57,15 @@ class ProductsController < ApplicationController
     end
   end
 
+  def create_variants
+    @variants = params[:variants]
+
+  
+
+  # Respond with the updated @variants
+  render partial: 'variants', locals: { variants: @variants }
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_product
