@@ -28,9 +28,15 @@
     <%= form.rich_text_area  :description %>
   </div>
   <br><br>
+  
   <%= form.fields_for :product_options do |p_options| %>
-    <%= render "products/product_option_feilds", f: p_options %>
+    <div class="div-product-option-card">
+      <%= render "products/product_option_feilds", f: p_options %>
+    </div>
+    
   <% end %>
+
+  
    <!-- Inserted elements will be injected before that target. -->
    <div data-product-options-target="target"></div>
 

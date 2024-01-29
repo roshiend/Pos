@@ -12,14 +12,13 @@ export default class extends NestedForm {
   add() {
     const templateContent = this.templateTarget.innerHTML;
   
-    // Count the number of existing fields
-    const existingFieldsCount = this.element.querySelectorAll('.product-options-wrapper').length;
-    
-
+    // Count the number of visible and existing fields
+    const visibleExistingFieldsCount = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').length;
+  
     // Check if adding a new field will exceed the limit (in this case, 3)
-    if (existingFieldsCount < 3) {
+    if (visibleExistingFieldsCount < 3) {
       // Replace NEW_RECORD with the appropriate index for the new field
-      const newIndex = existingFieldsCount;
+      const newIndex = visibleExistingFieldsCount;
       const newTemplateContent = templateContent.replace(/NEW_RECORD/g, newIndex);
   
       // Append the new field to the target without replacing existing content
