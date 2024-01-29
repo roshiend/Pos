@@ -1,3 +1,4 @@
+
 import NestedForm from 'stimulus-rails-nested-form'
 
 export default class extends NestedForm {
@@ -6,6 +7,10 @@ export default class extends NestedForm {
     super.connect()
     console.log('Controller loaded !')
     this.updateAddButtonVisibility();
+     // Add event listeners for input changes
+    this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
+      this.addInputEventListeners(field);
+    });
   }
   
   // Define an action for the "add" event
@@ -23,9 +28,15 @@ export default class extends NestedForm {
   
       // Append the new field to the target without replacing existing content
       this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
+       // Add event listeners for the new input fields
+        const newField = this.targetTarget.lastElementChild;
+        this.addInputEventListeners(newField);
   
       // Recalculate the field count and update button visibility
       this.updateAddButtonVisibility();
+      // Recalculate the Cartesian product and update variants in real-time
+      this.updateVariants();
+
     } else {
       console.log('Maximum number of fields reached.');
     }
@@ -46,6 +57,7 @@ export default class extends NestedForm {
   
       // Recalculate the field count and update button visibility
       this.updateAddButtonVisibility();
+      this.updateVariants();
     }
   }
   
@@ -89,6 +101,72 @@ export default class extends NestedForm {
        }
     });
   }
+
+  updateVariants() {
+    // Collect input values from existing product options
+    const options = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).map(field => {
+      return {
+        name: field.querySelector('[name*="[product_option_name]"]').value,
+        values: field.querySelector('[name*="[product_option_values]"]').value.split(',').map(value => value.trim())
+      };
+    });
+
+    // Generate Cartesian product
+    const cartesianProduct = this.generateCartesianProduct(options);
+
+    // Display variants in real-time (you may need to customize this part based on your UI)
+    this.displayVariants(cartesianProduct);
+  }
+  generateCartesianProduct(options) {
+    // Check if there are no options or only one option
+    if (options.length === 0 || options.some(option => option.values.length === 0)) {
+      return [];
+    }
+  
+    // Use nested loops to generate the Cartesian product
+    const cartesianProduct = options.reduce((acc, option) => {
+      const currentOptionValues = option.values.map(value => ({ [option.name]: value }));
+  
+      return acc.length === 0
+        ? currentOptionValues
+        : acc.flatMap(combination => currentOptionValues.map(value => ({ ...combination, ...value })));
+    }, []);
+  
+    return cartesianProduct;
+  }
+  
+  displayVariants(cartesianProduct) {
+    // Assuming you have a container to display the variants, you might need to customize this part based on your UI
+    const variantsContainer = document.getElementById('variants-container');
+  
+    // Clear existing variants
+    variantsContainer.innerHTML = '';
+  
+    // Create and append elements for each variant
+    cartesianProduct.forEach((variant, index) => {
+      const variantElement = document.createElement('div');
+      variantElement.innerHTML = `<p>Variant ${index + 1}: ${JSON.stringify(variant)}</p>`;
+      variantsContainer.appendChild(variantElement);
+    });
+  }
+
+  addInputEventListeners(field) {
+    const nameInput = field.querySelector('[name*="[product_option_name]"]');
+    const valuesInput = field.querySelector('[name*="[product_option_values]"]');
+  
+    nameInput.addEventListener('input', () => {
+      this.updateVariants();
+    });
+  
+    valuesInput.addEventListener('input', () => {
+      this.updateVariants();
+    });
+  }
+  
+  
+  
+
+  
   
   
     
