@@ -115,19 +115,19 @@ export default class extends NestedForm {
   addInputEventListeners(field) {
     const nameInput = field.querySelector('[name*="[product_option_name]"]');
     const valuesInput = field.querySelector('[name*="[product_option_values]"]');
-  
+
     const handleInputChange = () => {
-      const nameValue = nameInput.value.trim();
-      const valuesValue = valuesInput.value.trim();
-  
-      // Check if both name and values are not empty before triggering the update
-      if (nameValue !== '' && valuesValue !== '') {
+        const nameValue = nameInput.value.trim();
+        const valuesValue = valuesInput.value.trim();
         this.updateVariants();
-      }
+        // // Check if at least one of name or values is not empty before triggering the update
+        // if (nameValue !== '' || valuesValue !== '') {
+        //     this.updateVariants();
+        // }
     };
-  
+
     nameInput.addEventListener('input', handleInputChange);
     valuesInput.addEventListener('input', handleInputChange);
-  }
+}
   
 }

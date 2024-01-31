@@ -13,18 +13,11 @@
       <tr>
         <td>
           <% combination[:values].each do |option_name, option_value| %>
-            <strong><%= option_name %>:</strong> <%= option_value %><br>
+            <strong><%= option_value %></strong><br>
           <% end %>
         </td>
         <td>
-          <%= form.fields_for :variants, Variant.new, child_index: combination[:id] do |variant_fields| %>
-            <%= variant_fields.text_field :sku %>
-          <% end %>
-        </td>
-        <td>
-          <%= form.fields_for :variants, Variant.new, child_index: combination[:id] do |variant_fields| %>
-            <%= variant_fields.text_field :price %>
-          <% end %>
+          
         </td>
       </tr>
     <% end %>
