@@ -1,8 +1,7 @@
-// app/javascript/controllers/product_options_controller.js
-
 import NestedForm from 'stimulus-rails-nested-form';
 
 export default class extends NestedForm {
+  
   connect() {
     super.connect();
     console.log('Controller loaded!');
@@ -13,44 +12,23 @@ export default class extends NestedForm {
       this.addInputEventListeners(field);
     });
   }
-
-  addInputEventListeners(field) {
-    const nameInput = field.querySelector('[name*="[product_option_name]"]');
-    const valuesInput = field.querySelector('[name*="[product_option_values]"]');
-
-    nameInput.addEventListener('input', () => {
-      this.updateVariants();
-    });
-
-    valuesInput.addEventListener('input', () => {
-      this.updateVariants();
-    });
-  }
-
+  
   add() {
     const templateContent = this.templateTarget.innerHTML;
-
-    // Count the number of visible and existing fields
+  
     const visibleExistingFieldsCount = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').length;
-
-    // Check if adding a new field will exceed the limit (in this case, 3)
+  
     if (visibleExistingFieldsCount < 3) {
-      // Replace NEW_RECORD with the appropriate index for the new field
       const newIndex = visibleExistingFieldsCount;
       const newTemplateContent = templateContent.replace(/NEW_RECORD/g, newIndex);
-
-      // Append the new field to the target without replacing existing content
+  
       this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
 
-      // Add event listeners for the new input fields
       const newField = this.targetTarget.lastElementChild;
       this.addInputEventListeners(newField);
-
-      // Recalculate the field count and update button visibility
+  
       this.updateAddButtonVisibility();
-      // Recalculate the Cartesian product and update variants in real-time
-      this.updateVariants();
-
+      //this.updateVariants();
     } else {
       console.log('Maximum number of fields reached.');
     }
@@ -58,41 +36,37 @@ export default class extends NestedForm {
 
   remove(event) {
     const wrapper = event.target.closest('.product-options-wrapper');
-
+  
     if (wrapper) {
-      // Mark the field for destruction by setting _destroy to 1
       wrapper.querySelector('[name*="[_destroy]"]').value = '1';
-
-      // Remove the field from the DOM
       wrapper.style.display = 'none';
-
-      // Recalculate the field count and update button visibility
+  
       this.updateAddButtonVisibility();
       this.updateVariants();
     }
   }
-
+  
   updateAddButtonVisibility() {
     const visibleFields = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])'));
-
+  
     const addButton = this.element.querySelector('[data-action="product-options#add"]');
     addButton.style.display = visibleFields.length < 3 ? 'block' : 'none';
-
+  
     this.recalculateNestedFieldIndices();
   }
 
   recalculateNestedFieldIndices() {
     const fields = this.element.querySelectorAll('.product-options-wrapper');
-
+  
     fields.forEach((field, index) => {
       field.querySelectorAll('[name*="product_options_attributes"]').forEach(input => {
         input.name = input.name.replace(/\[(\d+)\]/, `[${index}]`);
       });
-
+  
       field.querySelectorAll('label[for*="product_options_attributes"]').forEach(label => {
         label.htmlFor = label.htmlFor.replace(/\[(\d+)\]/, `[${index}]`);
       });
-
+  
       field.querySelectorAll('[id*="product_options_attributes"]').forEach(element => {
         element.id = element.id.replace(/\[(\d+)\]/, `[${index}]`);
       });
@@ -105,26 +79,21 @@ export default class extends NestedForm {
   }
 
   updateVariants() {
-    const options = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).map(field => {
+    const product_options = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).map(field => {
       return {
-        name: field.querySelector('[name*="[product_option_name]"]').value,
-        values: field.querySelector('[name*="[product_option_values]"]').value.split(',').map(value => value.trim())
+        product_option_name: field.querySelector('[name*="[product_option_name]"]').value,
+        product_option_values: field.querySelector('[name*="[product_option_values]"]').value.split(',').map(value => value.trim())
       };
     });
 
-    const cartesianProduct = this.generateCartesianProduct(options);
-
-    this.sendVariantsToServer(cartesianProduct);
-  }
-
-  sendVariantsToServer(cartesianProduct) {
+    // Make a POST request to the server
     fetch('/products/create_variants', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-Token': document.getElementsByName('csrf-token')[0].content
       },
-      body: JSON.stringify({ variants: cartesianProduct })
+      body: JSON.stringify({ product_options }),
     })
     .then(response => {
       if (!response.ok) {
@@ -142,21 +111,23 @@ export default class extends NestedForm {
       console.error('Error sending variants to server:', error);
     });
   }
+
+  addInputEventListeners(field) {
+    const nameInput = field.querySelector('[name*="[product_option_name]"]');
+    const valuesInput = field.querySelector('[name*="[product_option_values]"]');
   
-
-  generateCartesianProduct(options) {
-    if (options.length === 0 || options.some(option => option.values.length === 0)) {
-      return [];
-    }
-
-    const cartesianProduct = options.reduce((acc, option) => {
-      const currentOptionValues = option.values.map(value => ({ [option.name]: value }));
-
-      return acc.length === 0
-        ? currentOptionValues
-        : acc.flatMap(combination => currentOptionValues.map(value => ({ ...combination, ...value })));
-    }, []);
-
-    return cartesianProduct;
+    const handleInputChange = () => {
+      const nameValue = nameInput.value.trim();
+      const valuesValue = valuesInput.value.trim();
+  
+      // Check if both name and values are not empty before triggering the update
+      if (nameValue !== '' && valuesValue !== '') {
+        this.updateVariants();
+      }
+    };
+  
+    nameInput.addEventListener('input', handleInputChange);
+    valuesInput.addEventListener('input', handleInputChange);
   }
+  
 }

@@ -57,24 +57,40 @@ class ProductsController < ApplicationController
     end
   end
 
+ 
   def create_variants
-    @variants = params[:variants]
+    product_options = params[:product_options]
+    @form = form
+    # Extract product_option_values from each product_option
+    options_values = product_options.map { |option| option[:product_option_values] }
+  
+    # Generate Cartesian product
+    cartesian_product = options_values.shift.product(*options_values)
+  
+    # Transform the Cartesian product into an array of hashes
+    @combinations = cartesian_product.map.with_index do |combination, index|
+      variant_hash = {}
+  
+      product_options.each_with_index do |option, option_index|
+        variant_hash[option[:product_option_name]] = combination[option_index]
+      end
+  
+      { id: index, values: variant_hash }
+    end
+  
+    # Respond with the generated variants
+    #render partial: 'variants', locals: { combinations: @combinations }
+    render partial: 'variants', locals: { combinations: @combinations }
+    
+  
+  end
 
   
-
-  # Respond with the updated @variants
-  render partial: 'variants', locals: { variants: @variants }
-  end
 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_product
       @product = Product.find(params[:id])
-    end
-
-    # Only allow a list of trusted parameters through.
-    def product_params
-      params.require(:product).permit(:name, :description, variants_attributes: [:id, :sku, :price],product_options_attributes:[:id,:_destroy,:product_option_name,product_option_values: []])
     end
 
     
