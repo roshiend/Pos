@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_01_28_163847) do
+ActiveRecord::Schema[7.0].define(version: 2024_02_04_112328) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -52,6 +52,16 @@ ActiveRecord::Schema[7.0].define(version: 2024_01_28_163847) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "combinations", force: :cascade do |t|
+    t.string "option_combination"
+    t.bigint "product_id", null: false
+    t.bigint "variant_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id"], name: "index_combinations_on_product_id"
+    t.index ["variant_id"], name: "index_combinations_on_variant_id"
+  end
+
   create_table "product_options", force: :cascade do |t|
     t.string "product_option_name", null: false
     t.string "product_option_values", default: [], null: false, array: true
@@ -69,9 +79,10 @@ ActiveRecord::Schema[7.0].define(version: 2024_01_28_163847) do
   end
 
   create_table "variants", force: :cascade do |t|
-    t.bigint "product_id", null: false
     t.string "sku"
     t.decimal "price", precision: 10, scale: 2
+    t.string "unique_id"
+    t.bigint "product_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["product_id"], name: "index_variants_on_product_id"
@@ -79,6 +90,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_01_28_163847) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "combinations", "products"
+  add_foreign_key "combinations", "variants"
   add_foreign_key "product_options", "products"
   add_foreign_key "variants", "products"
 end

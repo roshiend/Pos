@@ -36,19 +36,29 @@
     
   <% end %>
 
-  
+  <% if @product.variants.any? %>
+  <!-- Fields for updating variants -->
+    <% @product.variants.each_with_index do |variant, index| %>
+        <div class="variant-row">
+          <input type="hidden" name="product[variant_attributes][<%= index %>][unique_id]" value="<%= variant.unique_id %>">
+          
+          <label for="variant_sku_<%= index %>">SKU:</label>
+          <input type="text" id="variant_sku_<%= index %>" name="product[variant_attributes][<%= index %>][sku]" value="<%= variant.sku %>">
+
+          <label for="variant_price_<%= index %>">Price:</label>
+          <input type="text" id="variant_price_<%= index %>" name="product[variant_attributes][<%= index %>][price]" value="<%= variant.price %>">
+        </div>
+    <% end %>
+  <% end %>
+
+
    <!-- Inserted elements will be injected before that target. -->
    <div data-product-options-target="target"></div>
 
    <button type="button" data-action="product-options#add">Add Option</button>
   
-   <div id="variants-container">
-    <%unless @combinations.nil?%>
-      <!-- In your main view where you render the partial -->
-      <%= render partial: 'products/variants', locals: { form: form, combinations: @combinations } %>
-
-    <%end%>
-   </div>
+   <div id="variants-container"></div>
+   
   <div>
     <%= form.submit %>
   </div>

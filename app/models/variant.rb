@@ -1,8 +1,13 @@
 class Variant < ApplicationRecord
-  belongs_to :product
-  #has_many :Option_value_variants
-  #validates :option_id, presence: true
-  #validates :option_values, presence: true
-  validates :sku, presence: true
-  validates :price, presence: true
+    require 'securerandom'
+    belongs_to :product
+    has_many :combinations, dependent: :destroy
+    accepts_nested_attributes_for :combinations, allow_destroy: true,:reject_if => :all_blank
+
+    before_save :generate_unique_id
+
+    
+  def generate_unique_id
+    self.unique_id ||= SecureRandom.uuid
+  end
 end

@@ -11,6 +11,8 @@ export default class extends NestedForm {
     this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
       this.addInputEventListeners(field);
     });
+
+   
   }
   
   add() {
@@ -129,5 +131,6 @@ export default class extends NestedForm {
     nameInput.addEventListener('input', handleInputChange);
     valuesInput.addEventListener('input', handleInputChange);
 }
-  
+
+
 }

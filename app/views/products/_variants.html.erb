@@ -1,25 +1,20 @@
-<!-- products/_variants.html.erb -->
-
-<table>
-  <thead>
-    <tr>
-      <th>Combination</th>
-      <th>SKU</th>
-      <th>Price</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% combinations.each do |combination| %>
-      <tr>
-        <td>
-          <% combination[:values].each do |option_name, option_value| %>
-            <strong><%= option_value %></strong><br>
+<!---products/_variants.html.erb-->>
+<% if variants.any? %>
+  <h2>Variants:</h2>
+  <ul>
+    <% variants.each_with_index do |variant, index| %>
+      <li>
+        <% variant.each do |key, value| %>
+          <% if key == 'sku' || key == 'price' %>
+            <strong><%= key.capitalize %>:</strong>
+            <%= text_field_tag "product[variants_attributes][#{index}][#{key}]", value %><br>
+          <% else %>
+            <strong><%= key.capitalize %>:</strong> <%= value %><br>
           <% end %>
-        </td>
-        <td>
-          
-        </td>
-      </tr>
+        <% end %>
+      </li>
     <% end %>
-  </tbody>
-</table>
+  </ul>
+<% else %>
+  <p>No variants available.</p>
+<% end %>

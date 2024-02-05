@@ -1,0 +1,22 @@
+<%= form_with(model: combination) do |form| %>
+  <% if combination.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(combination.errors.count, "error") %> prohibited this combination from being saved:</h2>
+
+      <ul>
+        <% combination.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :option_combination, style: "display: block" %>
+    <%= form.text_field :option_combination %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
