@@ -13,6 +13,7 @@ class ProductsController < ApplicationController
   # GET /products/new
   def new
     @product = Product.new
+    
   end
 
   # GET /products/1/edit
@@ -64,19 +65,12 @@ class ProductsController < ApplicationController
  
   def create_variants
     product_options = params[:product_options]
-    existing_variants = params[:existing_variants] || [] # Assuming existing_variants is an array of variants
-  
-    # Ensure product_options is an array and not empty
-    return unless product_options.is_a?(Array) && !product_options.empty?
-  
-    # Generate all possible combinations of product options with SKU and price
-    variants = generate_variants(product_options, existing_variants)
-  
-    # Render the variants as HTML or respond with JSON, depending on your needs
-    respond_to do |format|
-      format.html { render partial: 'variants', locals: { variants: variants } }
-      format.json { render json: { variants: variants } }
-    end
+
+    # Parse the received JSON data
+    # Assuming product_options is an array of hashes with keys :product_option_name and :product_option_values
+    combinations = generate_variants(product_options)
+
+    render partial: 'variants', locals: { combinations: combinations }
   end
   
   
@@ -105,35 +99,24 @@ class ProductsController < ApplicationController
     end
     
 
-    def generate_variants(product_options, existing_variants)
-      # Example code to generate all possible combinations with SKU and price
-      # This assumes that each product_option_values is an array of values
-      product_options.reduce([]) do |combinations, option|
+    def generate_variants(product_options)
+      # Implementation to generate combinations
+      # You can use algorithms like Cartesian product to generate combinations
+      # Here's a simplified example using nested loops:
+      combinations = [[]]
+  
+      product_options.each do |option|
         option_values = option[:product_option_values]
-        next combinations if option_values.empty?
-    
-        if combinations.empty?
-          combinations = option_values.map { |value| { option[:product_option_name] => value } }
-        else
-          combinations = combinations.flat_map do |combination|
-            option_values.map { |value| combination.merge(option[:product_option_name] => value) }
+        next if option_values.blank?
+  
+        combinations = combinations.flat_map do |combination|
+          option_values.map do |value|
+            combination + [value]
           end
         end
-    
-        # Add SKU and price inputs to each variant
-        combinations.each { |variant| variant.merge!({ 'sku' => '', 'price' => '' }) }
-    
-        # Update existing variants with their corresponding values
-        combinations.each do |variant|
-          existing_variant = existing_variants.find { |existing| existing.slice(*option_values.map { |ov| option[:product_option_name] }) == variant.slice(*option_values.map { |ov| option[:product_option_name] }) }
-          if existing_variant
-            variant['sku'] = existing_variant['sku']
-            variant['price'] = existing_variant['price']
-          end
-        end
-    
-        combinations
       end
+  
+      combinations.map { |variant| variant.join(' / ') }
     end
     
     
