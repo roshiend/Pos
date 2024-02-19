@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Option values</h1>
+
+<div id="option_values">
+  <% @option_values.each do |option_value| %>
+    <%= render option_value %>
+    <p>
+      <%= link_to "Show this option value", option_value %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New option value", new_option_value_path %>

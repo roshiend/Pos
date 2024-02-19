@@ -18,7 +18,7 @@ class ProductsController < ApplicationController
 
   # GET /products/1/edit
   def edit
-    variants = @product.variants.all
+    combinations = @product.variants.all
   end
 
   # POST /products or /products.json
@@ -27,6 +27,7 @@ class ProductsController < ApplicationController
   
     if @product.save
       
+
       respond_to do |format|
         format.html { redirect_to product_url(@product), notice: "Product was successfully created." }
         format.json { render :show, status: :created, location: @product }
@@ -65,13 +66,19 @@ class ProductsController < ApplicationController
  
   def create_variants
     product_options = params[:product_options]
-
+  
     # Parse the received JSON data
     # Assuming product_options is an array of hashes with keys :product_option_name and :product_option_values
     combinations = generate_variants(product_options)
-
+  
+    combinations.each do |combination|
+      puts "-------->#{combination}"
+    end
+  
     render partial: 'variants', locals: { combinations: combinations }
   end
+  
+  
   
   
 
@@ -98,26 +105,27 @@ class ProductsController < ApplicationController
       params.require(:product).permit(:name, :description, variants_attributes: [:id, :sku, :price,:unique_id],product_options_attributes:[:id,:_destroy,:product_option_name,product_option_values: []])
     end
     
-
     def generate_variants(product_options)
-      # Implementation to generate combinations
-      # You can use algorithms like Cartesian product to generate combinations
-      # Here's a simplified example using nested loops:
+      return [] if product_options.blank?
+    
       combinations = [[]]
-  
-      product_options.each do |option|
+    
+      product_options.values.each do |option|
         option_values = option[:product_option_values]
         next if option_values.blank?
-  
+    
         combinations = combinations.flat_map do |combination|
           option_values.map do |value|
             combination + [value]
           end
         end
       end
-  
+    
       combinations.map { |variant| variant.join(' / ') }
     end
+    
+    
+    
     
     
 end

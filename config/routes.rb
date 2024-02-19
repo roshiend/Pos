@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  resources :options, only: [:index] do
+    resources :option_values, only: [:index]
+  end
   resources :combinations
   resources :variants
   #resources :variants

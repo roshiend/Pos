@@ -1,8 +1,12 @@
 import NestedForm from 'stimulus-rails-nested-form';
 
+
+
 export default class extends NestedForm {
   
   connect() {
+   
+    
     super.connect();
     console.log('Controller loaded!');
     this.updateAddButtonVisibility();
@@ -81,13 +85,14 @@ export default class extends NestedForm {
   }
 
   updateVariants() {
-    const product_options = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).map(field => {
-      return {
+    const product_options = {};
+    Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
+      product_options[index] = {
         product_option_name: field.querySelector('[name*="[product_option_name]"]').value,
-        product_option_values: field.querySelector('[name*="[product_option_values]"]').value.split(',').map(value => value.trim())
+        product_option_values: Array.from(field.querySelectorAll('[name*="[product_option_values]"] option:checked')).map(option => option.value)
       };
     });
-
+  
     // Make a POST request to the server
     fetch('/products/create_variants', {
       method: 'POST',
@@ -105,7 +110,7 @@ export default class extends NestedForm {
     })
     .then(data => {
       console.log('Variants sent to server:', data);
-
+  
       // Update the view with the received HTML
       this.element.querySelector('#variants-container').innerHTML = data;
     })
@@ -113,24 +118,30 @@ export default class extends NestedForm {
       console.error('Error sending variants to server:', error);
     });
   }
+  
+  
+  
+  
+  
 
-  addInputEventListeners(field) {
+ addInputEventListeners(field) {
     const nameInput = field.querySelector('[name*="[product_option_name]"]');
     const valuesInput = field.querySelector('[name*="[product_option_values]"]');
 
     const handleInputChange = () => {
         const nameValue = nameInput.value.trim();
         const valuesValue = valuesInput.value.trim();
-        this.updateVariants();
-        // // Check if at least one of name or values is not empty before triggering the update
-        // if (nameValue !== '' || valuesValue !== '') {
-        //     this.updateVariants();
-        // }
+        // Check if values is not empty before triggering the update
+        if (valuesValue !== '') {
+            this.updateVariants();
+        }
+        console.log(valuesInput);
     };
 
-    nameInput.addEventListener('input', handleInputChange);
     valuesInput.addEventListener('input', handleInputChange);
+    console.log(valuesInput);
 }
+
 
 
 }

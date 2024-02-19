@@ -1,14 +1,12 @@
-<!-- _variants.html.erb -->
-
 <% if combinations.present? %>
   <h2>Variants</h2>
   <ul>
     <% combinations.each_with_index do |combination, index| %>
       <li>
-        <strong>Variant <%= index + 1 %>:</strong> <%= combination %>
-        <%= text_field_tag "product[variant_attributes][#{index}][sku]", '', placeholder: 'SKU' %>
-        <%= text_field_tag "product[variant_attributes][#{index}][price]", '', placeholder: 'price' %>
-        
+        <%= combination%>
+       
+        <%= text_field_tag "product[variants_attributes][#{index}][sku]", '', placeholder: 'SKU' %>
+        <%= text_field_tag "product[variants_attributes][#{index}][price]", '', placeholder: 'Price' %>
       </li>
     <% end %>
   </ul>

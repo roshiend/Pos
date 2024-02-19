@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_02_04_112328) do
+ActiveRecord::Schema[7.0].define(version: 2024_02_15_154131) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -62,6 +62,20 @@ ActiveRecord::Schema[7.0].define(version: 2024_02_04_112328) do
     t.index ["variant_id"], name: "index_combinations_on_variant_id"
   end
 
+  create_table "option_values", force: :cascade do |t|
+    t.string "value"
+    t.bigint "option_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["option_id"], name: "index_option_values_on_option_id"
+  end
+
+  create_table "options", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "product_options", force: :cascade do |t|
     t.string "product_option_name", null: false
     t.string "product_option_values", default: [], null: false, array: true
@@ -92,6 +106,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_02_04_112328) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "combinations", "products"
   add_foreign_key "combinations", "variants"
+  add_foreign_key "option_values", "options"
   add_foreign_key "product_options", "products"
   add_foreign_key "variants", "products"
 end
