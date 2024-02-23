@@ -102,7 +102,9 @@ class ProductsController < ApplicationController
 
      # Only allow a list of trusted parameters through.
      def product_params
-      params.require(:product).permit(:name, :description, variants_attributes: [:id, :sku, :price,:unique_id],product_options_attributes:[:id,:_destroy,:product_option_name,product_option_values: []])
+      params.require(:product).permit(:name, :description, variants_attributes: [:id, :sku, :price,:unique_id,combinations_attributes: [
+        :option_combination
+      ]],product_options_attributes:[:id,:_destroy,:product_option_name,product_option_values: []])
     end
     
     def generate_variants(product_options)
