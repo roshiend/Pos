@@ -70,9 +70,11 @@ class ProductsController < ApplicationController
     # Parse the received JSON data
     # Assuming product_options is an array of hashes with keys :product_option_name and :product_option_values
     combinations = generate_variants(product_options)
-  
+    
     combinations.each do |combination|
+      
       puts "-------->#{combination}"
+     
     end
   
     render partial: 'variants', locals: { combinations: combinations }

@@ -3,10 +3,13 @@
   <ul>
     <% combinations.each_with_index do |combination, index| %>
       <li>
+        
         <%= combination%>
        
-        <%= text_field_tag "product[variants_attributes][#{index}][sku]", '', placeholder: 'SKU' %>
-        <%= text_field_tag "product[variants_attributes][#{index}][price]", '', placeholder: 'Price' %>
+        <%#= text_field_tag "product[variants_attributes][#{index}][combinations_attributes][#{index}][option_combination]", combination, placeholder: 'SKU' %>
+
+        <%#= text_field_tag "product[variants_attributes][#{index}][sku]", '', placeholder: 'SKU' %>
+        <%#= text_field_tag "product[variants_attributes][#{index}][price]", '', placeholder: 'Price' %>
       </li>
     <% end %>
   </ul>
