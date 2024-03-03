@@ -4,7 +4,7 @@ class Product < ApplicationRecord
     validates :description, presence: true
     has_many :product_options, dependent: :destroy
     has_many :variants, dependent: :destroy
-    has_many :combinations, through: :variant
+    has_many :combinations, through: :variants
     
     accepts_nested_attributes_for :variants, allow_destroy: true,:reject_if => :all_blank
     accepts_nested_attributes_for :product_options, allow_destroy: true ,:reject_if => :all_blank

@@ -18,7 +18,9 @@ class ProductsController < ApplicationController
 
   # GET /products/1/edit
   def edit
-    combinations = @product.variants.all
+    @variants = @product.variants.all  # Load all existing variants
+    combinations = @product.variants.map(&:combinations).map(&:first).map(&:option_combination) 
+    #render partial: 'variants', locals: { combinations: combinations }
   end
 
   # POST /products or /products.json
@@ -26,8 +28,18 @@ class ProductsController < ApplicationController
     @product = Product.new(product_params)
   
     if @product.save
-      
-
+      #Create variants with associated combinations
+      variant_options = params[:product][:variants_attributes]
+      variant_options.each do |index, options|
+        sku = options[:sku]
+        price = options[:price]
+        combination = options[:combinations_attributes].values.first[:option_combination]
+  
+        variant = @product.variants.find_or_initialize_by(sku: sku, price: price)
+        combination = variant.combinations.find_or_initialize_by(option_combination: combination)
+        combination.save
+      end
+  
       respond_to do |format|
         format.html { redirect_to product_url(@product), notice: "Product was successfully created." }
         format.json { render :show, status: :created, location: @product }
@@ -39,6 +51,8 @@ class ProductsController < ApplicationController
       end
     end
   end
+  
+  
   
   
   
@@ -127,9 +141,5 @@ class ProductsController < ApplicationController
     
       combinations.map { |variant| variant.join(' / ') }
     end
-    
-    
-    
-    
-    
+
 end
