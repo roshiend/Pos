@@ -1,18 +1,18 @@
-<% if combinations.present? %>
+<!--products/_variants.html.erb-->
+<% if @combinations.present?%>
   <h2>Variants</h2>
   <ul>
-    <% combinations.each_with_index do |combination, index| %>
+    <% @combinations.each_with_index do |combination, index| %>
+    <%= fields_for :variants, Variant.new do |f| %>
       <li>
-        
-        <%= combination%>
-       
+        <%=combination%>
         <%= hidden_field_tag "product[variants_attributes][#{index}][combinations_attributes][#{index}][option_combination]", combination, placeholder: 'SKU' %>
-
-        <%= text_field_tag "product[variants_attributes][#{index}][sku]", '', placeholder: 'SKU' %>
-        <%= text_field_tag "product[variants_attributes][#{index}][price]", '', placeholder: 'Price' %>
+        <%= f.text_field :sku, placeholder: 'SKU' %>
+        <%= f.text_field :price, placeholder: 'Price' %>
       </li>
     <% end %>
+  <% end %>
+    
   </ul>
-<% else %>
-  <p>No variants available</p>
+
 <% end %>

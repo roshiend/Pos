@@ -19,8 +19,8 @@ class ProductsController < ApplicationController
   # GET /products/1/edit
   def edit
     @variants = @product.variants.all  # Load all existing variants
-    combinations = @product.variants.map(&:combinations).map(&:first).map(&:option_combination) 
-    #render partial: 'variants', locals: { combinations: combinations }
+    @combinations = @product.variants.map(&:combinations).map(&:first).map(&:option_combination) 
+    #render partial: 'variants', locals: { combinations: @combinations }
   end
 
   # POST /products or /products.json
@@ -83,15 +83,16 @@ class ProductsController < ApplicationController
   
     # Parse the received JSON data
     # Assuming product_options is an array of hashes with keys :product_option_name and :product_option_values
-    combinations = generate_variants(product_options)
+    @combinations = generate_variants(product_options)
     
-    combinations.each do |combination|
+    @combinations.each do |combination|
       
       puts "-------->#{combination}"
      
     end
-  
-    render partial: 'variants', locals: { combinations: combinations }
+    #redirect_to new_variant_path(combinations: @combinations)
+    render partial: 'variants', locals: { combinations: @combinations }
+    
   end
   
   

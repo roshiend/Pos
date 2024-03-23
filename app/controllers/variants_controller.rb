@@ -13,10 +13,16 @@ class VariantsController < ApplicationController
   # GET /variants/new
   def new
     @variant = Variant.new
+    # @combinations = params[:combinations] || [] 
+    # puts "---------#{@combinations}----------"
   end
 
   # GET /variants/1/edit
   def edit
+    
+    # @combinations = params[:combinations] 
+    # puts "---------#{@combinations}----------"
+    
   end
 
   # POST /variants or /variants.json

@@ -1,12 +1,7 @@
 import NestedForm from 'stimulus-rails-nested-form';
 
-
-
 export default class extends NestedForm {
-  
   connect() {
-   
-    
     super.connect();
     console.log('Controller loaded!');
     this.updateAddButtonVisibility();
@@ -16,9 +11,8 @@ export default class extends NestedForm {
       this.addInputEventListeners(field);
     });
 
-   
   }
-  
+
   add() {
     const templateContent = this.templateTarget.innerHTML;
   
@@ -144,4 +138,6 @@ export default class extends NestedForm {
 
 
 
+
 }
+
