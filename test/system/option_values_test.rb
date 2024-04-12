@@ -14,7 +14,6 @@ class OptionValuesTest < ApplicationSystemTestCase
     visit option_values_url
     click_on "New option value"
 
-    fill_in "Value", with: @option_value.value
     click_on "Create Option value"
 
     assert_text "Option value was successfully created"
@@ -25,7 +24,6 @@ class OptionValuesTest < ApplicationSystemTestCase
     visit option_value_url(@option_value)
     click_on "Edit this option value", match: :first
 
-    fill_in "Value", with: @option_value.value
     click_on "Update Option value"
 
     assert_text "Option value was successfully updated"

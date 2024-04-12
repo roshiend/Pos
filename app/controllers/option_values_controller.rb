@@ -3,13 +3,7 @@ class OptionValuesController < ApplicationController
 
   # GET /option_values or /option_values.json
   def index
-    option = Option.find(params[:option_id])
-    @option_values = option.option_values
-
-    respond_to do |format|
-      format.json { render json: @option_values }
-    end
-    
+    @option_values = OptionValue.all
   end
 
   # GET /option_values/1 or /option_values/1.json
@@ -71,6 +65,6 @@ class OptionValuesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def option_value_params
-      params.require(:option_value).permit(:value)
+      params.fetch(:option_value, {})
     end
 end

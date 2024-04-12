@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @option_value_variant %>
+
+<div>
+  <%= link_to "Edit this option value variant", edit_option_value_variant_path(@option_value_variant) %> |
+  <%= link_to "Back to option value variants", option_value_variants_path %>
+
+  <%= button_to "Destroy this option value variant", @option_value_variant, method: :delete %>
+</div>

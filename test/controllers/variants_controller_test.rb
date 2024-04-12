@@ -17,7 +17,7 @@ class VariantsControllerTest < ActionDispatch::IntegrationTest
 
   test "should create variant" do
     assert_difference("Variant.count") do
-      post variants_url, params: { variant: { price: @variant.price, sku: @variant.sku } }
+      post variants_url, params: { variant: {  } }
     end
 
     assert_redirected_to variant_url(Variant.last)
@@ -34,7 +34,7 @@ class VariantsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update variant" do
-    patch variant_url(@variant), params: { variant: { price: @variant.price, sku: @variant.sku } }
+    patch variant_url(@variant), params: { variant: {  } }
     assert_redirected_to variant_url(@variant)
   end
 

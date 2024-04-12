@@ -14,8 +14,6 @@ class VariantsTest < ApplicationSystemTestCase
     visit variants_url
     click_on "New variant"
 
-    fill_in "Price", with: @variant.price
-    fill_in "Sku", with: @variant.sku
     click_on "Create Variant"
 
     assert_text "Variant was successfully created"
@@ -26,8 +24,6 @@ class VariantsTest < ApplicationSystemTestCase
     visit variant_url(@variant)
     click_on "Edit this variant", match: :first
 
-    fill_in "Price", with: @variant.price
-    fill_in "Sku", with: @variant.sku
     click_on "Update Variant"
 
     assert_text "Variant was successfully updated"

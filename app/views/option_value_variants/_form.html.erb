@@ -1,0 +1,17 @@
+<%= form_with(model: option_value_variant) do |form| %>
+  <% if option_value_variant.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(option_value_variant.errors.count, "error") %> prohibited this option_value_variant from being saved:</h2>
+
+      <ul>
+        <% option_value_variant.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

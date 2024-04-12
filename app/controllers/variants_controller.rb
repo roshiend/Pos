@@ -13,16 +13,10 @@ class VariantsController < ApplicationController
   # GET /variants/new
   def new
     @variant = Variant.new
-    # @combinations = params[:combinations] || [] 
-    # puts "---------#{@combinations}----------"
   end
 
   # GET /variants/1/edit
   def edit
-    
-    # @combinations = params[:combinations] 
-    # puts "---------#{@combinations}----------"
-    
   end
 
   # POST /variants or /variants.json
@@ -71,6 +65,6 @@ class VariantsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def variant_params
-      params.require(:variant).permit(:sku, :price)
+      params.fetch(:variant, {})
     end
 end

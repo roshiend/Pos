@@ -1,6 +1,0 @@
-<!-- app/views/products/_variants_fields.html.erb -->
-
-<%= form.fields_for :variants, Variant.new, child_index: combination[:id] do |variant_fields| %>
-  <%= variant_fields.text_field :sku %>
-  <%= variant_fields.text_field :price %>
-<% end %>

@@ -17,7 +17,7 @@ class OptionValuesControllerTest < ActionDispatch::IntegrationTest
 
   test "should create option_value" do
     assert_difference("OptionValue.count") do
-      post option_values_url, params: { option_value: { value: @option_value.value } }
+      post option_values_url, params: { option_value: {  } }
     end
 
     assert_redirected_to option_value_url(OptionValue.last)
@@ -34,7 +34,7 @@ class OptionValuesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update option_value" do
-    patch option_value_url(@option_value), params: { option_value: { value: @option_value.value } }
+    patch option_value_url(@option_value), params: { option_value: {  } }
     assert_redirected_to option_value_url(@option_value)
   end
 

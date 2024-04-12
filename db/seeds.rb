@@ -8,7 +8,7 @@
 # db/seeds.rb
 
 # Option: Color
-color_option = Option.find_or_create_by(name: 'Color')
+color_option = OptionType.find_or_create_by(name: 'Color')
 
 # Option Values for Color
 color_option.option_values.find_or_create_by(value: 'Red')
@@ -21,7 +21,7 @@ color_option.option_values.find_or_create_by(value: 'Black')
 color_option.option_values.find_or_create_by(value: 'White')
 
 # Option: Size
-size_option = Option.find_or_create_by(name: 'Size')
+size_option = OptionType.find_or_create_by(name: 'Size')
 
 # Option Values for Size
 size_option.option_values.find_or_create_by(value: 'Small')
@@ -30,7 +30,7 @@ size_option.option_values.find_or_create_by(value: 'Large')
 size_option.option_values.find_or_create_by(value: 'Extra Large')
 
 # Option: Material
-material_option = Option.find_or_create_by(name: 'Material')
+material_option = OptionType.find_or_create_by(name: 'Material')
 
 # Option Values for Material
 material_option.option_values.find_or_create_by(value: 'Cotton')
@@ -41,7 +41,7 @@ material_option.option_values.find_or_create_by(value: 'Denim')
 material_option.option_values.find_or_create_by(value: 'Synthetic')
 
 # Option: Flavor
-flavor_option = Option.find_or_create_by(name: 'Flavor')
+flavor_option = OptionType.find_or_create_by(name: 'Flavor')
 
 # Option Values for Flavor
 flavor_option.option_values.find_or_create_by(value: 'Chocolate')
@@ -52,7 +52,7 @@ flavor_option.option_values.find_or_create_by(value: 'Coffee')
 flavor_option.option_values.find_or_create_by(value: 'Caramel')
 
 # Option: Gender
-gender_option = Option.find_or_create_by(name: 'Gender')
+gender_option = OptionType.find_or_create_by(name: 'Gender')
 
 # Option Values for Gender
 gender_option.option_values.find_or_create_by(value: 'Male')

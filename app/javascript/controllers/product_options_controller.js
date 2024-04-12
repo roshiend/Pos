@@ -78,40 +78,40 @@ export default class extends NestedForm {
     });
   }
 
-  updateVariants() {
-    const product_options = {};
-    Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
-      product_options[index] = {
-        product_option_name: field.querySelector('[name*="[product_option_name]"]').value,
-        product_option_values: Array.from(field.querySelectorAll('[name*="[product_option_values]"] option:checked')).map(option => option.value)
-      };
-    });
+  // updateVariants() {
+  //   const product_options = {};
+  //   Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
+  //     product_options[index] = {
+  //       product_option_name: field.querySelector('[name*="[product_option_name]"]').value,
+  //       product_option_values: Array.from(field.querySelectorAll('[name*="[product_option_values]"] option:checked')).map(option => option.textContent)
+  //     };
+  //   });
   
-    // Make a POST request to the server
-    fetch('/products/create_variants', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': document.getElementsByName('csrf-token')[0].content
-      },
-      body: JSON.stringify({ product_options }),
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.text(); // Assuming the response is HTML of the partial view
-    })
-    .then(data => {
-      console.log('Variants sent to server:', data);
+  //   // Make a POST request to the server
+  //   fetch('/products/create_variants', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       'X-CSRF-Token': document.getElementsByName('csrf-token')[0].content
+  //     },
+  //     body: JSON.stringify({ product_options }),
+  //   })
+  //   .then(response => {
+  //     if (!response.ok) {
+  //       throw new Error('Network response was not ok');
+  //     }
+  //     return response.text(); // Assuming the response is HTML of the partial view
+  //   })
+  //   .then(data => {
+  //     console.log('Variants sent to server:', data);
   
-      // Update the view with the received HTML
-      this.element.querySelector('#variants-container').innerHTML = data;
-    })
-    .catch(error => {
-      console.error('Error sending variants to server:', error);
-    });
-  }
+  //     // Update the view with the received HTML
+  //     this.element.querySelector('#variants-container').innerHTML = data;
+  //   })
+  //   .catch(error => {
+  //     console.error('Error sending variants to server:', error);
+  //   });
+  // }
   
   
   

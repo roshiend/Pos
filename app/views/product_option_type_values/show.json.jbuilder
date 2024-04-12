@@ -1,0 +1,1 @@
+json.partial! "product_option_type_values/product_option_type_value", product_option_type_value: @product_option_type_value
