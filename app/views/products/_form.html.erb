@@ -13,7 +13,11 @@
     </div>
   <% end %>
 
-  
+  <template data-product-options-target="template">
+    <%= form.fields_for :option_types, OptionType.new, child_index: 'NEW_RECORD' do |p_options| %>
+      <%= render "product_option_feilds", f: p_options %>
+    <% end %>
+  </template>
 
 
   <div>
@@ -32,37 +36,23 @@
   </div>
   <br><br>
   
-
- 
-
-    <%= form.fields_for :variants do |variant_fields| %>
-      <!-- Variant fields and dynamically populated option values -->
-    <% end %>
-  </div>
+  <%= form.fields_for :option_types do |p_options| %>
+    <div class="div-product-option-card">
+      <%= render "products/product_option_feilds", f: p_options %>
+    </div>
+    
+  <% end %>
     
   
-  <template data-product-options-target="template">
-    <%= form.fields_for :product_option_type_values, ProductOptionTypeValue.new, child_index: 'NEW_RECORD' do |p_options| %>
-      <%= render "product_option_fields", f: p_options %>
-    <% end %>
-  </template>
+   
 
-  <%= form.fields_for :product_option_type_values do |p_options| %>
-  <div class="div-product-option-card">
-    <%= render "products/product_option_fields", f: p_options %>
-  </div>
-  
-<% end %>
-  
+   <!-- Inserted elements will be injected before that target. -->
+   <div data-product-options-target="target"></div>
 
- 
-
- <!-- Inserted elements will be injected before that target. -->
- <div data-product-options-target="target"></div>
-
- <button type="button" data-action="product-options#add">Add Option</button>
+   <button type="button" data-action="product-options#add">Add Option</button>
 
    
+
    
    
   <div>

@@ -1,0 +1,21 @@
+<!-- app/views/products/_option_type_fields.html.erb -->
+<div class="option-type">
+    <%= f.input :name %>
+    <div class="option-values">
+      <%= f.simple_fields_for :option_values do |value_builder| %>
+        <%= render 'option_value_fields', f: value_builder %>
+      <% end %>
+    </div>
+    <button class="add-option-value">Add Option Value</button>
+  </div>
+  
+  <script>
+    document.querySelector('.add-option-value').addEventListener('click', function(e) {
+      e.preventDefault();
+      var container = e.target.previousElementSibling; // the .option-values div
+      var newField = document.createElement('div');
+      newField.innerHTML = `<%= j render('option_value_fields', f: f.simple_fields_for(:option_values, OptionValue.new, child_index: "new_#{Time.now.to_i}") { |value_builder| value_builder }) %>`;
+      container.appendChild(newField);
+    });
+  </script>
+  

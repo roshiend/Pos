@@ -1,8 +1,9 @@
 class OptionValue < ApplicationRecord
     belongs_to :option_type
-    #has_many :option_value_variants, dependent: :destroy
-    #has_many :variants, through: :option_value_variants
-    #has_many :product_option_type_values,dependent: :destroy
+    has_many :option_value_variants, dependent: :destroy
+    has_many :variants, through: :option_value_variants
 
-    #accepts_nested_attributes_for :option_value_variants, allow_destroy: true,:reject_if => :all_blank
+    validates_presence_of :name
+    #validates_uniqueness_of :name, scope: :option_type_id, case_sensitive: false
 end
+

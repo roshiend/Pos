@@ -1,5 +1,9 @@
 class OptionValueVariant < ApplicationRecord
-  belongs_to :variant
-  belongs_to :product_option_type_value
-  validates :product_option_type_value, presence: true
+    belongs_to :option_value
+    belongs_to :variant
+  
+    validates_presence_of :option_value
+    validates_presence_of :variant
+    validates_uniqueness_of :option_value_id, scope: :variant_id
+
 end

@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @option_value_set %>
+
+<div>
+  <%= link_to "Edit this option value set", edit_option_value_set_path(@option_value_set) %> |
+  <%= link_to "Back to option value sets", option_value_sets_path %>
+
+  <%= button_to "Destroy this option value set", @option_value_set, method: :delete %>
+</div>

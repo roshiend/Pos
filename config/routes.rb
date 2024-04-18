@@ -1,9 +1,10 @@
 Rails.application.routes.draw do
-  resources :product_option_type_values
   resources :option_value_variants
   resources :variants
   resources :option_values
   resources :option_types
+  resources :option_value_sets
+  resources :option_type_sets
   resources :products
   resources :option_types, only: [:index] do
     resources :option_values, only: [:index]

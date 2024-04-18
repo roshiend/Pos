@@ -8,53 +8,53 @@
 # db/seeds.rb
 
 # Option: Color
-color_option = OptionType.find_or_create_by(name: 'Color')
+color_option = OptionTypeSet.find_or_create_by(name: 'Color')
 
 # Option Values for Color
-color_option.option_values.find_or_create_by(value: 'Red')
-color_option.option_values.find_or_create_by(value: 'Blue')
-color_option.option_values.find_or_create_by(value: 'Green')
-color_option.option_values.find_or_create_by(value: 'Yellow')
-color_option.option_values.find_or_create_by(value: 'Orange')
-color_option.option_values.find_or_create_by(value: 'Purple')
-color_option.option_values.find_or_create_by(value: 'Black')
-color_option.option_values.find_or_create_by(value: 'White')
+color_option.option_value_sets.find_or_create_by(value: 'Red')
+color_option.option_value_sets.find_or_create_by(value: 'Blue')
+color_option.option_value_sets.find_or_create_by(value: 'Green')
+color_option.option_value_sets.find_or_create_by(value: 'Yellow')
+color_option.option_value_sets.find_or_create_by(value: 'Orange')
+color_option.option_value_sets.find_or_create_by(value: 'Purple')
+color_option.option_value_sets.find_or_create_by(value: 'Black')
+color_option.option_value_sets.find_or_create_by(value: 'White')
 
 # Option: Size
-size_option = OptionType.find_or_create_by(name: 'Size')
+size_option = OptionTypeSet.find_or_create_by(name: 'Size')
 
 # Option Values for Size
-size_option.option_values.find_or_create_by(value: 'Small')
-size_option.option_values.find_or_create_by(value: 'Medium')
-size_option.option_values.find_or_create_by(value: 'Large')
-size_option.option_values.find_or_create_by(value: 'Extra Large')
+size_option.option_value_sets.find_or_create_by(value: 'Small')
+size_option.option_value_sets.find_or_create_by(value: 'Medium')
+size_option.option_value_sets.find_or_create_by(value: 'Large')
+size_option.option_value_sets.find_or_create_by(value: 'Extra Large')
 
 # Option: Material
-material_option = OptionType.find_or_create_by(name: 'Material')
+material_option = OptionTypeSet.find_or_create_by(name: 'Material')
 
 # Option Values for Material
-material_option.option_values.find_or_create_by(value: 'Cotton')
-material_option.option_values.find_or_create_by(value: 'Leather')
-material_option.option_values.find_or_create_by(value: 'Wool')
-material_option.option_values.find_or_create_by(value: 'Silk')
-material_option.option_values.find_or_create_by(value: 'Denim')
-material_option.option_values.find_or_create_by(value: 'Synthetic')
+material_option.option_value_sets.find_or_create_by(value: 'Cotton')
+material_option.option_value_sets.find_or_create_by(value: 'Leather')
+material_option.option_value_sets.find_or_create_by(value: 'Wool')
+material_option.option_value_sets.find_or_create_by(value: 'Silk')
+material_option.option_value_sets.find_or_create_by(value: 'Denim')
+material_option.option_value_sets.find_or_create_by(value: 'Synthetic')
 
 # Option: Flavor
-flavor_option = OptionType.find_or_create_by(name: 'Flavor')
+flavor_option = OptionTypeSet.find_or_create_by(name: 'Flavor')
 
 # Option Values for Flavor
-flavor_option.option_values.find_or_create_by(value: 'Chocolate')
-flavor_option.option_values.find_or_create_by(value: 'Vanilla')
-flavor_option.option_values.find_or_create_by(value: 'Strawberry')
-flavor_option.option_values.find_or_create_by(value: 'Mint')
-flavor_option.option_values.find_or_create_by(value: 'Coffee')
-flavor_option.option_values.find_or_create_by(value: 'Caramel')
+flavor_option.option_value_sets.find_or_create_by(value: 'Chocolate')
+flavor_option.option_value_sets.find_or_create_by(value: 'Vanilla')
+flavor_option.option_value_sets.find_or_create_by(value: 'Strawberry')
+flavor_option.option_value_sets.find_or_create_by(value: 'Mint')
+flavor_option.option_value_sets.find_or_create_by(value: 'Coffee')
+flavor_option.option_value_sets.find_or_create_by(value: 'Caramel')
 
 # Option: Gender
-gender_option = OptionType.find_or_create_by(name: 'Gender')
+gender_option = OptionTypeSet.find_or_create_by(name: 'Gender')
 
 # Option Values for Gender
-gender_option.option_values.find_or_create_by(value: 'Male')
-gender_option.option_values.find_or_create_by(value: 'Female')
-gender_option.option_values.find_or_create_by(value: 'Unisex')
+gender_option.option_value_sets.find_or_create_by(value: 'Male')
+gender_option.option_value_sets.find_or_create_by(value: 'Female')
+gender_option.option_value_sets.find_or_create_by(value: 'Unisex')

@@ -1,0 +1,24 @@
+<!--products/product_option_field.html.erb-->
+<div class="product-options-wrapper" data-new-record="<%#= f.object.new_record? %>">
+   
+  <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.id] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control', id: 'product-option-name-select' %>
+  
+  <%#= f.text_field :product_option_values,:multiple => true,:placeholder=> "Enter options seperated by comma"%>
+  <%= f.fields_for :option_values, (f.object.option_values.any? ? f.object.option_values : f.object.option_values.build) do |option_value| %>
+    <%= option_value.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.id] }, 
+    selected: option_value.object.name), { prompt: 'Select option value',:include_hidden => false }, class: 'product-option-name-select form-control select2', id: 'product-option-value-select', :multiple => true%>
+  <% end %>
+
+
+  
+  <%#= f.select :product_option_values, options_for_select(OptionValue.all.map { |ov| [ov.value, ov.id] }, 
+  selected: f.object.product_option_values), { prompt: 'Select option value',:include_hidden => false }, class: 'product-option-name-select form-control select2', id: 'product-option-value-select', :multiple => true%>
+
+
+  <button type="button" data-action="product-options#remove">Remove option</button>
+
+  <%= f.hidden_field :_destroy %>
+  
+  
+</div>
+

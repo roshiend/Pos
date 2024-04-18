@@ -4,6 +4,7 @@ class ProductsController < ApplicationController
   # GET /products or /products.json
   def index
     @products = Product.all
+   
   end
 
   # GET /products/1 or /products/1.json
@@ -14,49 +15,38 @@ class ProductsController < ApplicationController
   def new
     @product = Product.new
    
-     @option_types = OptionType.all
-     @option_values = OptionValue.all
-    
-    # @option_types.each do |option_type|
-    #   unless @product.option_types.include?(option_type)
-    #     @product.product_option_type_values.build(option_type: option_type)
-    #   end
-    # end
   end
 
   # GET /products/1/edit
   def edit
-    @product = Product.find(params[:id])
-   
-    @option_types = OptionType.all
-    @option_values = OptionValue.all
-    # Ensure there's a product_option_type_value for each option_type
-    if @product.product_option_type_values.blank?
-      @product.product_option_type_values.build
-    end
   end
-
 
   # POST /products or /products.json
   def create
     @product = Product.new(product_params)
-    if @product.save
-      @product.generate_variants
-      redirect_to @product, notice: 'Product was successfully created.'
-    else
-      @option_types = OptionType.all.includes(:option_values)
-      render :new
+    
+    respond_to do |format|
+      if @product.save
+        @product.generate_variants
+        format.html { redirect_to product_url(@product), notice: "Product was successfully created." }
+        format.json { render :show, status: :created, location: @product }
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @product.errors, status: :unprocessable_entity }
+      end
     end
   end
 
   # PATCH/PUT /products/1 or /products/1.json
   def update
-   
-    if @product.update(product_params)
-      
-      redirect_to @product, notice: 'Product was successfully updated.'
-    else
-      render :edit
+    respond_to do |format|
+      if @product.update(product_params)
+        format.html { redirect_to product_url(@product), notice: "Product was successfully updated." }
+        format.json { render :show, status: :ok, location: @product }
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @product.errors, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -70,17 +60,16 @@ class ProductsController < ApplicationController
     end
   end
 
+  
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_product
       @product = Product.find(params[:id])
     end
 
-   
-
-
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:name, :description,:master_price,product_option_type_values_attributes:[:id,:_destroy,:product_option_name,product_option_values: []])
+      params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id, :sku, :price,:unique_id],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id,{name:[]}]])
     end
-  end
+end
