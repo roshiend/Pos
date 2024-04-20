@@ -90,16 +90,36 @@ export default class extends NestedForm {
     });
   }
 
-  
+  //option_types_attributes"=>{"0"=>{"name"=>"1", "option_values_attributes"=>{"0"=>{"name"=>["2", "3"]}}
   updateVariants() {
+    // const option_type_attributes = {};
+    // Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
+    //   option_type_attributes[index] = {
+    //     name: field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value,
+    //     option_values_attributes: Array.from(field.querySelectorAll('[name*="[option_values_attributes]"][name*="[name]"] option:checked')).map(option => option.value)
+    //   };
+    // });
+  
     const option_type_attributes = {};
     Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
-      option_type_attributes[index] = {
-        name: field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value,
-        option_values_attributes: Array.from(field.querySelectorAll('[name*="[option_values_attributes]"][name*="[name]"] option:checked')).map(option => option.value)
-      };
+        const optionTypeName = field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value;
+        const checkedOptions = field.querySelectorAll('[name*="[option_values_attributes]"][name*="[name]"] option:checked');
+        let optionValues = [];
+
+        // Collect all checked option values into an array
+        Array.from(checkedOptions).forEach(option => {
+            optionValues.push(option.value);
+        });
+
+        // Store each option type with its corresponding indexed option values
+        option_type_attributes[index] = {
+            name: optionTypeName,
+            option_values_attributes: {
+                [index]: { name: optionValues }
+            }
+        };
     });
-  
+
     // Make a POST request to the server
     fetch('/products/create_variants', {
       method: 'POST',
@@ -147,7 +167,6 @@ export default class extends NestedForm {
     valuesInput.addEventListener('input', handleInputChange);
     console.log(valuesInput);
 }
-
 
 
 
