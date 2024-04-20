@@ -59,15 +59,27 @@ export default class extends NestedForm {
     const fields = this.element.querySelectorAll('.product-options-wrapper');
   
     fields.forEach((field, index) => {
-      field.querySelectorAll('[name*="product_options_attributes"]').forEach(input => {
+      field.querySelectorAll('[name*="product[option_types_attributes]"][name*="[name]"]').forEach(input => {
+        input.name = input.name.replace(/\[(\d+)\]/, `[${index}]`);
+      });
+
+      field.querySelectorAll('[name*="product[option_types_attributes]"][name*="[option_values_attributes]"][name*="[name]"]').forEach(input => {
         input.name = input.name.replace(/\[(\d+)\]/, `[${index}]`);
       });
   
-      field.querySelectorAll('label[for*="product_options_attributes"]').forEach(label => {
+      field.querySelectorAll('label[for*="product[option_types_attributes]"][name*="[name]"]').forEach(label => {
         label.htmlFor = label.htmlFor.replace(/\[(\d+)\]/, `[${index}]`);
       });
-  
-      field.querySelectorAll('[id*="product_options_attributes"]').forEach(element => {
+      
+      field.querySelectorAll('label[for*="product[option_types_attributes]"][name*="[option_values_attributes]"][name*="[name]"]').forEach(label => {
+        label.htmlFor = label.htmlFor.replace(/\[(\d+)\]/, `[${index}]`);
+      });
+
+      field.querySelectorAll('[id*="product[option_types_attributes]"][name*="[name]"]').forEach(element => {
+        element.id = element.id.replace(/\[(\d+)\]/, `[${index}]`);
+      });
+
+      field.querySelectorAll('[id*="product[option_types_attributes]"][name*="[option_values_attributes]"][name*="[name]"]').forEach(element => {
         element.id = element.id.replace(/\[(\d+)\]/, `[${index}]`);
       });
 
@@ -78,49 +90,49 @@ export default class extends NestedForm {
     });
   }
 
-  // updateVariants() {
-  //   const product_options = {};
-  //   Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
-  //     product_options[index] = {
-  //       product_option_name: field.querySelector('[name*="[product_option_name]"]').value,
-  //       product_option_values: Array.from(field.querySelectorAll('[name*="[product_option_values]"] option:checked')).map(option => option.textContent)
-  //     };
-  //   });
   
-  //   // Make a POST request to the server
-  //   fetch('/products/create_variants', {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'X-CSRF-Token': document.getElementsByName('csrf-token')[0].content
-  //     },
-  //     body: JSON.stringify({ product_options }),
-  //   })
-  //   .then(response => {
-  //     if (!response.ok) {
-  //       throw new Error('Network response was not ok');
-  //     }
-  //     return response.text(); // Assuming the response is HTML of the partial view
-  //   })
-  //   .then(data => {
-  //     console.log('Variants sent to server:', data);
+  updateVariants() {
+    const option_type_attributes = {};
+    Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
+      option_type_attributes[index] = {
+        name: field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value,
+        option_values_attributes: Array.from(field.querySelectorAll('[name*="[option_values_attributes]"][name*="[name]"] option:checked')).map(option => option.value)
+      };
+    });
   
-  //     // Update the view with the received HTML
-  //     this.element.querySelector('#variants-container').innerHTML = data;
-  //   })
-  //   .catch(error => {
-  //     console.error('Error sending variants to server:', error);
-  //   });
-  // }
+    // Make a POST request to the server
+    fetch('/products/create_variants', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.getElementsByName('csrf-token')[0].content
+      },
+      body: JSON.stringify({ option_type_attributes }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.text(); // Assuming the response is HTML of the partial view
+    })
+    .then(data => {
+      console.log('Variants sent to server:', data);
   
+      // Update the view with the received HTML
+      this.element.querySelector('#variants-container').innerHTML = data;
+    })
+    .catch(error => {
+      console.error('Error sending variants to server:', error);
+    });
+  }
   
-  
+
   
   
 
- addInputEventListeners(field) {
-    const nameInput = field.querySelector('[name*="[product_option_name]"]');
-    const valuesInput = field.querySelector('[name*="[product_option_values]"]');
+ addInputEventListeners(field, index) {
+    const nameInput = field.querySelector('#product-option-name-select');
+    const valuesInput = field.querySelector('#product-option-value-select');
 
     const handleInputChange = () => {
         const nameValue = nameInput.value.trim();
@@ -140,4 +152,3 @@ export default class extends NestedForm {
 
 
 }
-

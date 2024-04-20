@@ -34,28 +34,31 @@
     <%= form.label :master_price, style: "display: block" %>
     <%= form.text_field  :master_price %>
   </div>
-  <br><br>
+  <br>
   
-  <%= form.fields_for :option_types do |p_options| %>
-    <div class="div-product-option-card">
-      <%= render "products/product_option_feilds", f: p_options %>
-    </div>
-    
-  <% end %>
-    
   
-   
+    <%= form.fields_for :option_types do |p_options| %>
+      <div class="div-product-option-card">
+        <%= render "product_option_feilds", f: p_options %>
+      </div>
+    <% end %>
+  
 
-   <!-- Inserted elements will be injected before that target. -->
-   <div data-product-options-target="target"></div>
+    <div data-product-options-target="target"></div>
+    <button type="button" data-action="product-options#add">Add Option</button>
+ 
+    <%= turbo_frame_tag 'variants', data: { product_options_target: "variantsFrame" } do %>
+      <%= form.fields_for :variants do |variant_fields| %>
+        <!-- variant fields here -->
+      <% end %>
+    <% end %>
 
-   <button type="button" data-action="product-options#add">Add Option</button>
-
-   
-
-   
+  
+  
    
   <div>
     <%= form.submit %>
   </div>
 <% end %>
+
+  

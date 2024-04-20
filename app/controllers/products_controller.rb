@@ -27,7 +27,8 @@ class ProductsController < ApplicationController
     
     respond_to do |format|
       if @product.save
-        @product.generate_variants
+       # @product.generate_variants
+      # @product.update_or_create_variants(combine_option_values)
         format.html { redirect_to product_url(@product), notice: "Product was successfully created." }
         format.json { render :show, status: :created, location: @product }
       else
@@ -60,7 +61,11 @@ class ProductsController < ApplicationController
     end
   end
 
-  
+  def create_variants
+    @product = Product.new(product_params)
+    @product.update_or_create_variants
+    render partial: 'variants', locals: { form: form_for(@product) }
+  end
 
   private
     # Use callbacks to share common setup or constraints between actions.

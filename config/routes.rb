@@ -12,6 +12,9 @@ Rails.application.routes.draw do
   #resources :variants
   resources :products do
     post 'create_variants', on: :collection
+    member do
+      get :update_variants
+    end
     
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

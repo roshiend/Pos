@@ -1,0 +1,4 @@
+<%= turbo_stream.replace "variants" do %>
+    <%= render partial: "products/variants", locals: { product: @product } %>
+<% end %>
+  
