@@ -47,13 +47,11 @@
     <div data-product-options-target="target"></div>
     <button type="button" data-action="product-options#add">Add Option</button>
  
-    <%= turbo_frame_tag 'variants', data: { product_options_target: "variantsFrame" } do %>
-      <%= form.fields_for :variants do |variant_fields| %>
-        <!-- variant fields here -->
-      <% end %>
+    <%= turbo_frame_tag 'variants_form' do %>
+      <%#= render partial: "variants", locals: { combinations: @combinations } %>
     <% end %>
-
   
+    
   
    
   <div>

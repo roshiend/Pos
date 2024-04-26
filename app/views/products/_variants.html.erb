@@ -1,14 +1,10 @@
-<%= form.fields_for :variants do |variant_fields| %>
-  <div class="variant-fields">
-    <%= variant_fields.label :sku, "SKU" %>
-    <%= variant_fields.text_field :sku %>
-
-    <%= variant_fields.label :price, "Price" %>
-    <%= variant_fields.number_field :price, step: 0.01 %>
-
-    <% if variant_fields.object.persisted? %>
-      <%= variant_fields.hidden_field :_destroy %>
-      <%= link_to "Remove Variant", '#', class: "remove_variant" %>
+<!-- products/_variants.html.erb -->
+<div id="variants-container">
+  <% if combinations.present?%>
+    <% combinations.each do |combination| %>
+      <div class="variant">
+        Combination: <%= combination.join(" / ") %>
+      </div>
     <% end %>
-  </div>
-<% end %>
+  <% end %>
+</div>

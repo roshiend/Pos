@@ -14,7 +14,7 @@ class ProductsController < ApplicationController
   # GET /products/new
   def new
     @product = Product.new
-   
+    #@product.variants.build
   end
 
   # GET /products/1/edit
@@ -62,10 +62,31 @@ class ProductsController < ApplicationController
   end
 
   def create_variants
-    @product = Product.new(product_params)
-    @product.update_or_create_variants
-    render partial: 'variants', locals: { form: form_for(@product) }
+    @product = Product.new
+    # option_type_attributes = params[:option_type_attributes]
+    # combinations = []
+  
+    # option_type_attributes.each do |_, option_type_data|
+    #   current_combination = []
+    #   option_type_data[:option_values_attributes].each do |_, option_value_data|
+    #     current_combination.push(option_value_data[:name])
+    #   end
+    #   combinations.push(current_combination) unless current_combination.empty?
+    #   puts "combinations---->#{combinations}"
+    # end
+  
+    # respond_to do |format|
+    #   format.turbo_stream do
+    #     render turbo_stream: turbo_stream.replace("variants-container", partial: "variants", locals: { combinations: combinations })
+    #   end
+    #   format.html { redirect_to some_path } # Handle other formats if necessary
+    # end
+    combinations = Product.prepare_option_value_combinations(params[:option_type_attributes])
+    puts "combinations---->#{combinations}"
+self.create_unique_variants(combinations)
+
   end
+  
 
   private
     # Use callbacks to share common setup or constraints between actions.
@@ -77,4 +98,16 @@ class ProductsController < ApplicationController
     def product_params
       params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id, :sku, :price,:unique_id],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id,{name:[]}]])
     end
+
+    # def prepare_option_value_combinations(option_type_attributes)
+    #   combinations = [[]]
+    #   option_type_attributes.option_types.each do |option_type|
+    #     current_combination = []
+    #     option_type.option_values.each do |option_value|
+    #       current_combination.push(option_value.id)
+    #     end
+    #     combinations.push(current_combination) unless current_combination.empty?
+    #   end
+    #   combinations
+    # end
 end

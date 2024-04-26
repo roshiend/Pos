@@ -8,30 +8,45 @@ class Product < ApplicationRecord
     accepts_nested_attributes_for :option_types, allow_destroy: true
     accepts_nested_attributes_for :variants, allow_destroy: true
 
-    after_save :update_or_create_variants
+    #after_save :update_or_create_variants
 
-    private
+    #private
   
-    def update_or_create_variants
-      # Assuming you'll revise this to work with ID combinations directly:
-      option_value_combinations = prepare_option_value_combinations
+    # def update_or_create_variants
+    #   # Assuming you'll revise this to work with ID combinations directly:
+    #   option_value_combinations = prepare_option_value_combinations
   
-      ActiveRecord::Base.transaction do
-        create_unique_variants(option_value_combinations)
-      end
-    end
+    #   ActiveRecord::Base.transaction do
+    #     create_unique_variants(option_value_combinations)
+    #   end
+    # end
   
-    def prepare_option_value_combinations
+    # def prepare_option_value_combinations
+    #   combinations = []
+    #   self.option_types.each do |option_type|
+    #     current_combination = []
+    #     option_type.option_values.each do |option_value|
+    #       current_combination.push(option_value.id)
+    #     end
+    #     combinations.push(current_combination) unless current_combination.empty?
+    #   end
+    #   combinations
+    # end
+
+    def self.prepare_option_value_combinations(option_type_attributes)
       combinations = []
-      self.option_types.each do |option_type|
+  
+      option_type_attributes.each do |_, option_type_data|
         current_combination = []
-        option_type.option_values.each do |option_value|
-          current_combination.push(option_value.id)
+        option_type_data[:option_values_attributes].each do |_, option_value_data|
+          current_combination.push(option_value_data[:name])
         end
         combinations.push(current_combination) unless current_combination.empty?
       end
+  
       combinations
     end
+    
   
     def create_unique_variants(combinations)
       current_variants = self.variants.includes(:option_values)
@@ -49,9 +64,9 @@ class Product < ApplicationRecord
           # Update existing variant if needed
         else
           # Create a new variant
-          new_variant = self.variants.create!(price: master_price)
+          new_variant = self.variants.build(price: master_price)
           sorted_ids.each do |id|
-            new_variant.option_value_variants.create!(option_value_id: id)
+            new_variant.option_value_variants.build(option_value_id: id)
           end
         end
   
@@ -59,7 +74,7 @@ class Product < ApplicationRecord
       end
   
       # Cleanup: destroy variants not included in the update
-      current_variant_map.values.each(&:destroy)
+      current_variant_map.values.each(mark_for_destruction)
     end
       
     

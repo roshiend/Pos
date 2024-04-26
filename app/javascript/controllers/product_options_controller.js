@@ -90,16 +90,8 @@ export default class extends NestedForm {
     });
   }
 
-  //option_types_attributes"=>{"0"=>{"name"=>"1", "option_values_attributes"=>{"0"=>{"name"=>["2", "3"]}}
   updateVariants() {
-    // const option_type_attributes = {};
-    // Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
-    //   option_type_attributes[index] = {
-    //     name: field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value,
-    //     option_values_attributes: Array.from(field.querySelectorAll('[name*="[option_values_attributes]"][name*="[name]"] option:checked')).map(option => option.value)
-    //   };
-    // });
-  
+     
     const option_type_attributes = {};
     Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
         const optionTypeName = field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value;
@@ -139,7 +131,7 @@ export default class extends NestedForm {
       console.log('Variants sent to server:', data);
   
       // Update the view with the received HTML
-      this.element.querySelector('#variants-container').innerHTML = data;
+      //this.element.querySelector('#variants-container').innerHTML = data;
     })
     .catch(error => {
       console.error('Error sending variants to server:', error);
@@ -161,11 +153,11 @@ export default class extends NestedForm {
         if (valuesValue !== '') {
             this.updateVariants();
         }
-        console.log(valuesInput);
+        //console.log(valuesInput);
     };
 
     valuesInput.addEventListener('input', handleInputChange);
-    console.log(valuesInput);
+   // console.log(valuesInput);
 }
 
 
