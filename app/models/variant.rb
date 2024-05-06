@@ -19,5 +19,10 @@ class Variant < ApplicationRecord
       errors.add(:option_values, "must be unique")
     end
   end
+
+
+  
+  
   
 end
+

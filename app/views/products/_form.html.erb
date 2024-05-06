@@ -36,24 +36,22 @@
   </div>
   <br>
   
-  
     <%= form.fields_for :option_types do |p_options| %>
       <div class="div-product-option-card">
         <%= render "product_option_feilds", f: p_options %>
       </div>
     <% end %>
   
-
     <div data-product-options-target="target"></div>
     <button type="button" data-action="product-options#add">Add Option</button>
- 
-    <%= turbo_frame_tag 'variants_form' do %>
-      <%#= render partial: "variants", locals: { combinations: @combinations } %>
-    <% end %>
-  
-    
-  
+       <div id="variants-container"></div>
+
+        <!-- Iterate over combinations -->
+      
+      
+      
    
+
   <div>
     <%= form.submit %>
   </div>

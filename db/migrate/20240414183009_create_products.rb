@@ -4,6 +4,7 @@ class CreateProducts < ActiveRecord::Migration[7.0]
       t.string :name
       t.string :description
       t.decimal :master_price, precision: 10, scale: 2
+     
       t.timestamps
     end
   end

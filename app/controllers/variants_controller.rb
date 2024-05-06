@@ -34,6 +34,8 @@ class VariantsController < ApplicationController
     end
   end
 
+ 
+
   # PATCH/PUT /variants/1 or /variants/1.json
   def update
     respond_to do |format|

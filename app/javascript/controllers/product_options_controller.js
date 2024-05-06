@@ -1,16 +1,34 @@
 import NestedForm from 'stimulus-rails-nested-form';
+import SlimSelect from 'slim-select'
 
 export default class extends NestedForm {
   connect() {
     super.connect();
     console.log('Controller loaded!');
-    this.updateAddButtonVisibility();
+    
+    // Initialize Slim Select on existing elements
+    const existingSelectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
+    this.initializeSlimSelect(existingSelectElements);
 
+    this.updateAddButtonVisibility();
+   // this.initializeSlimSelect();
     // Add event listeners for input changes
     this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
       this.addInputEventListeners(field);
     });
-
+  }
+  
+  initializeSlimSelect(elements) {
+    elements.forEach((element) => {
+      new SlimSelect({
+        select: element,
+        placeholder: "Select Something..",
+        allowDeselect: true,
+       // multiple: true,
+        showSearch: true,
+        hideSelectedOption: true
+      });
+    });
   }
 
   add() {
@@ -25,14 +43,17 @@ export default class extends NestedForm {
       this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
 
       const newField = this.targetTarget.lastElementChild;
+      // Initialize Slim Select for the new field
+      const selectElements = newField.querySelectorAll('.product-option-value-select, .product-option-name-select');
+      this.initializeSlimSelect(selectElements);
       this.addInputEventListeners(newField);
   
       this.updateAddButtonVisibility();
-      //this.updateVariants();
     } else {
       console.log('Maximum number of fields reached.');
     }
   }
+  
 
   remove(event) {
     const wrapper = event.target.closest('.product-options-wrapper');
@@ -91,7 +112,6 @@ export default class extends NestedForm {
   }
 
   updateVariants() {
-     
     const option_type_attributes = {};
     Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
         const optionTypeName = field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value;
@@ -111,9 +131,8 @@ export default class extends NestedForm {
             }
         };
     });
-
-    // Make a POST request to the server
-    fetch('/products/create_variants', {
+    //Make a POST request to the server
+    fetch('/create_variants', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -129,9 +148,8 @@ export default class extends NestedForm {
     })
     .then(data => {
       console.log('Variants sent to server:', data);
-  
-      // Update the view with the received HTML
-      //this.element.querySelector('#variants-container').innerHTML = data;
+        // Update the view with the received HTML
+      this.element.querySelector('#variants-container').innerHTML = data;
     })
     .catch(error => {
       console.error('Error sending variants to server:', error);
@@ -143,8 +161,8 @@ export default class extends NestedForm {
   
 
  addInputEventListeners(field, index) {
-    const nameInput = field.querySelector('#product-option-name-select');
-    const valuesInput = field.querySelector('#product-option-value-select');
+    const nameInput = field.querySelector('.product-option-name-select');
+    const valuesInput = field.querySelector('.product-option-value-select');
 
     const handleInputChange = () => {
         const nameValue = nameInput.value.trim();
@@ -159,6 +177,7 @@ export default class extends NestedForm {
     valuesInput.addEventListener('input', handleInputChange);
    // console.log(valuesInput);
 }
+
 
 
 

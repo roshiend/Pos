@@ -13,6 +13,7 @@ class OptionTypesController < ApplicationController
   # GET /option_types/new
   def new
     @option_type = OptionType.new
+    
   end
 
   # GET /option_types/1/edit

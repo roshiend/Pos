@@ -10,3 +10,5 @@ pin "@rails/actiontext", to: "actiontext.js"
 pin "stimulus-rails-nested-form" # @4.1.0
 pin "@rails/actioncable", to: "actioncable.esm.js"
 pin_all_from "app/javascript/channels", under: "channels"
+pin "@hotwired/stimulus", to: "https://ga.jspm.io/npm:@hotwired/stimulus@3.0.1/dist/stimulus.js"
+pin "slim-select" # @2.8.2

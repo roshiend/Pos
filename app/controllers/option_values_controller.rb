@@ -22,7 +22,7 @@ class OptionValuesController < ApplicationController
   # POST /option_values or /option_values.json
   def create
     @option_value = OptionValue.new(option_value_params)
-
+    
     respond_to do |format|
       if @option_value.save
         format.html { redirect_to option_value_url(@option_value), notice: "Option value was successfully created." }
