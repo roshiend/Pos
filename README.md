@@ -123,3 +123,180 @@ This approach ensures that each variant represents a unique combination of optio
     });
   });
 </script>
+
+
+
+<!--products/product_option_field.html.erb-->
+<div class="product-options-wrapper" data-new-record="<%= f.object.new_record? %>">
+  <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.id] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control', id: 'product-option-name-select' %>
+  <%= f.select :option_value_ids, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.id] }, selected: f.object.option_values.map(&:id)), {include_hidden: false }, multiple: true, class: 'product-option-value-select form-control slim-select', id: 'product-option-value-select' %>
+  <button type="button" data-action="product-options#remove">Remove option</button>
+  <%= f.hidden_field :_destroy %>
+</div>
+
+<%= f.fields_for :option_values, OptionValue.new, child_index: 'NEW_RECORD' do |option_value| %>
+    <% OptionValueSet.all.each do |ov| %>
+      <%= option_value.check_box :name, { multiple: true, id: 'product-option-value-checkbox', data: { controller: 'product-options' } }, ov.id, nil %>
+      <%= ov.value %>
+    <% end %>
+  <% end %>
+
+      # def save_option_values(option_types_attributes)
+    #   option_types_attributes.each do |index, option_type|
+    #     option_type_name = option_type[:name]
+    #     option_values_attributes = option_type[:option_values_attributes]
+    
+    #     option_values_attributes.each do |index, option_value|
+    #       names = option_value[:name]  # Assuming names is an array like ["1", "3"]
+    #       names.each do |name|
+    #         OptionValue.find_or_initialize_by(name: name)
+    #       end
+    #     end
+    #   end
+    # end
+    
+    
+    # def save_option_values(option_types_attributes)
+    #   option_types_attributes.each do |index, option_type|
+    #     option_type_name = option_type[:name]
+    #     option_values_attributes = option_type[:option_values_attributes]
+    
+    #     option_values_attributes.each do |index, option_value|
+    #       names = Array(option_value[:name])  # Convert to array in case it's not already
+    #       names.each do |name|
+    #         OptionValue.find_or_initialize_by(name: name)
+    #       end
+    #     end
+    #   end
+    # end
+
+    
+
+    
+    # def process_option_values(product)
+    #   option_types_params = params[:product][:option_types_attributes]
+  
+    #   option_types_params.each do |_, option_type_param|
+    #     next if option_type_param[:_destroy] == "1"
+  
+    #     option_type = product.option_types.find_or_initialize_by(id: option_type_param[:id])
+    #     option_type.update(name: OptionTypeSet.find(option_type_param[:id]).name)
+  
+    #     option_value_ids = option_type_param[:option_value_ids] || []
+  
+    #     # Clear existing option values
+    #     option_type.option_values.destroy_all
+  
+    #     # Add selected option values
+    #     option_value_ids.each do |option_value_id|
+    #       option_type.option_values.create(name: OptionValueSet.find(option_value_id).value)
+    #     end
+    #   end
+    # end
+
+    # def process_option_values(product)
+    #   option_types_params = params[:product][:option_types_attributes]
+  
+    #   option_types_params.each do |_, option_type_param|
+    #     next if option_type_param[:_destroy] == "1"
+  
+    #     option_type = product.option_types.find_or_initialize_by(id: option_type_param[:id])
+    #    # option_type.update(name: OptionTypeSet.find(option_type_param[:id]).name)
+  
+    #     option_value_ids = option_type_param[:option_value_ids] || []
+  
+    #     # Add selected option values
+    #     option_value_ids.each do |option_value_id|
+    #       #option_value = OptionValueSet.find(option_value_id)
+    #       option_type.option_values.find_or_create_by(name: option_value_id)
+    #     end
+    #   end
+    # end
+
+
+    
+    
+    
+
+
+    # def save_each_option_array_value_to_seperate_record(option_type_attributes)
+    #   return [] if option_type_attributes.blank?
+    #   option_values_array = []
+    
+    #   option_type_attributes.each do |_, option_type_data|
+    #     option_values_attributes = option_type_data["option_values_attributes"]
+    #     next if option_values_attributes.blank?
+    
+    #     option_values_attributes.each do |_, option_value_data|
+    #       option_value_data["name"].each do |name|
+    #         option_values_array << name
+    #       end
+    #     end
+    #   end
+    
+    #   # Create OptionValue records for each value in the array
+    #   option_values_array.each do |value|
+    #     OptionValue.find_or_create_by(name: value)
+    #   end
+    # end
+    
+    # def process_option_values(product)
+    #   option_types_attributes = params[:product][:option_types_attributes]
+  
+    #   option_types_attributes.each do |index, option_type|
+    #     option_type_name = option_type[:name]
+    #     option_value_ids = option_type[:option_value_ids]
+  
+    #     option_value_ids.each do |option_value_id|
+    #       option_value = OptionValueSet.find(option_value_id)
+    #       OptionValue.find_or_create_by(name: option_value.name)
+    #     end
+    #   end
+    # end
+    
+    # def process_option_values(product)
+    #   option_types_attributes = params[:product][:option_types_attributes]
+    
+    #   option_types_attributes.each do |index, option_type|
+    #     option_type_name = option_type[:name]
+    #     option_value_ids = option_type[:option_value_ids]
+    
+    #     # Find or create the OptionType
+    #     option_type = product.option_types.find_or_create_by(name: option_type_name)
+    
+    #     option_value_ids.each do |option_value_id|
+    #       option_value_set = OptionValueSet.find(option_value_id)
+    
+    #       # Find or create the OptionValue and associate it with the OptionType
+    #       option_value = option_type.option_values.find_or_create_by(name: option_value_set.name)
+    #     end
+    #   end
+    # end
+    
+    
+  # def process_option_values(product)
+  #   option_types_attributes = params[:product][:option_types_attributes]
+
+  #   option_types_attributes.each do |index, option_type|
+  #     option_type_name = option_type[:name]
+  #     option_value_ids = option_type[:option_value_ids]
+
+  #     option_value_ids.each do |option_value_id|
+  #       option_value = OptionValueSet.find(option_value_id)
+  #       OptionValue.create(name: option_value.name)
+  #     end
+  #   end
+  # end
+
+  #  def process_option_values(product)
+  #   option_types_attributes = params[:product][:option_types_attributes]
+
+  #   option_types_attributes.each do |index, option_type|
+  #     option_type_name = option_type[:name]
+  #     option_value_ids = option_type[:option_value_ids]
+
+  #     option_value_ids.each do |option_value_id|
+  #      puts "------> #{option_value_id}"
+  #     end
+  #   end
+  # end

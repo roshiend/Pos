@@ -2,12 +2,13 @@
 class Product < ApplicationRecord
     has_many :option_types, dependent: :destroy
     has_many :variants, dependent: :destroy
+    has_many :option_values, through: :option_types
     has_rich_text :description
     validates :name, presence: true
     validates :description, presence: true
 
     accepts_nested_attributes_for :option_types, allow_destroy: true
-
+    #after_save :save_each_option_array_value_to_seperate_record
     # after_save :update_or_create_variants
     
     # def update_or_create_variants
@@ -18,30 +19,36 @@ class Product < ApplicationRecord
     # end
    
 
-    def self.generate_combinations(option_type_attributes)
-        return [] if option_type_attributes.blank?
+   
     
-        combinations = []
+
+
+
+
+    # def self.generate_combinations(option_type_attributes)
+    #     return [] if option_type_attributes.blank?
     
-        option_type_attributes.each do |_, option_type_data|
-          option_values_attributes = option_type_data["option_values_attributes"]
-          next if option_values_attributes.blank?
+    #     combinations = []
     
-          current_combination = option_values_attributes.values.map { |option_value_data| option_value_data["name"] }.flatten
+    #     option_type_attributes.each do |_, option_type_data|
+    #       option_values_attributes = option_type_data["option_values_attributes"]
+    #       next if option_values_attributes.blank?
     
-          if combinations.empty?
-            combinations = current_combination.map { |value| [value] } # Ensure combinations is an array of arrays
-          else
-            combinations = combinations.product(current_combination).map(&:flatten)
-          end
-        end
+    #       current_combination = option_values_attributes.values.map { |option_value_data| option_value_data["name"] }.flatten
     
-        combinations
-        puts "combinations---->#{combinations}"
-        # combinations.each do |c|
-        #    Variant.create(option_value_variants: c)
-        #  end
-    end
+    #       if combinations.empty?
+    #         combinations = current_combination.map { |value| [value] } # Ensure combinations is an array of arrays
+    #       else
+    #         combinations = combinations.product(current_combination).map(&:flatten)
+    #       end
+    #     end
+    
+    #     combinations
+    #     puts "combinations---->#{combinations}"
+    #     # combinations.each do |c|
+    #     #    Variant.create(option_value_variants: c)
+    #     #  end
+    # end
 
    
 

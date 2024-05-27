@@ -5,13 +5,12 @@ export default class extends NestedForm {
   connect() {
     super.connect();
     console.log('Controller loaded!');
+    this.updateAddButtonVisibility();
     
-    // Initialize Slim Select on existing elements
-    const existingSelectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
+    // Initialize Slim Select on all existing elements
+    const existingSelectElements = this.element.querySelectorAll('.product-option-value-select,.product-option-name-select');
     this.initializeSlimSelect(existingSelectElements);
 
-    this.updateAddButtonVisibility();
-   // this.initializeSlimSelect();
     // Add event listeners for input changes
     this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
       this.addInputEventListeners(field);
@@ -22,9 +21,9 @@ export default class extends NestedForm {
     elements.forEach((element) => {
       new SlimSelect({
         select: element,
-        placeholder: "Select Something..",
+        placeholder: "Select",
         allowDeselect: true,
-       // multiple: true,
+        multiple: true,
         showSearch: true,
         hideSelectedOption: true
       });
@@ -43,8 +42,8 @@ export default class extends NestedForm {
       this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
 
       const newField = this.targetTarget.lastElementChild;
-      // Initialize Slim Select for the new field
       const selectElements = newField.querySelectorAll('.product-option-value-select, .product-option-name-select');
+      // Initialize Slim Select for the new field
       this.initializeSlimSelect(selectElements);
       this.addInputEventListeners(newField);
   
@@ -160,23 +159,44 @@ export default class extends NestedForm {
   
   
 
- addInputEventListeners(field, index) {
-    const nameInput = field.querySelector('.product-option-name-select');
-    const valuesInput = field.querySelector('.product-option-value-select');
+//  addInputEventListeners(field, index) {
+//     const nameInput = field.querySelector('.product-option-name-select');
+//     const valuesInput = field.querySelector('.product-option-value-select');
 
-    const handleInputChange = () => {
-        const nameValue = nameInput.value.trim();
-        const valuesValue = valuesInput.value.trim();
-        // Check if values is not empty before triggering the update
-        if (valuesValue !== '') {
-            this.updateVariants();
-        }
-        //console.log(valuesInput);
-    };
+//     const handleInputChange = () => {
+//         const nameValue = nameInput.value.trim();
+//         const valuesValue = valuesInput.value.trim();
+//         // Check if values is not empty before triggering the update
+//         if (valuesValue !== '') {
+//             this.updateVariants();
+//         }
+//         //console.log(valuesInput);
+//     };
 
-    valuesInput.addEventListener('input', handleInputChange);
-   // console.log(valuesInput);
+//     valuesInput.addEventListener('input', handleInputChange);
+//    // console.log(valuesInput);
+// }
+addInputEventListeners(field, index) {
+  const nameInput = field.querySelector('.product-option-name-select');
+  const valuesInput = field.querySelector('.product-option-value-select');
+
+  const handleInputChange = () => {
+    const nameValue = nameInput.value.trim();
+    const valuesValue = valuesInput.value.trim();
+    // Check if values is not empty before triggering the update
+    if (valuesValue !== '') {
+      this.updateVariants();
+    }
+  };
+
+  if (valuesInput) {
+    valuesInput.addEventListener('change', handleInputChange); // Use 'change' event instead of 'input'
+  } else {
+    console.error('Values input not found:', field);
+  }
 }
+
+
 
 
 

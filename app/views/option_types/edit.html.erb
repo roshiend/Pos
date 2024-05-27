@@ -1,10 +1,3 @@
-<h1>Editing option type</h1>
-
-<%= render "form", option_type: @option_type %>
-
-<br>
-
-<div>
-  <%= link_to "Show this option type", @option_type %> |
-  <%= link_to "Back to option types", option_types_path %>
-</div>
+<h1>Edit Option Type</h1>
+<%= render 'form', product: @product, option_type: @option_type %>
+<%= link_to 'Back to Product', @product %>
