@@ -61,7 +61,7 @@ export default class extends NestedForm {
     const wrapper = event.target.closest('.product-options-wrapper');
   
     if (wrapper) {
-      wrapper.querySelector('[name*="[_destroy]"]').value = '1';
+      wrapper.querySelector('[name*="[_destroy]"]').value = "1";
       wrapper.style.display = 'none';
   
       this.updateAddButtonVisibility();

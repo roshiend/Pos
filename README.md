@@ -305,3 +305,7 @@ orginal timestamps
 
   20240418085836 - option_value_variants
   20240617095937 - option_type_values
+
+
+Processing by ProductsController#update as TURBO_STREAM
+  Parameters: {"authenticity_token"=>"[FILTERED]", "product"=>{"name"=>"product", "description"=>"<div>asdasda</div>", "master_price"=>"120.0", "option_types_attributes"=>{"0"=>{"name"=>"1", "option_values_attributes"=>{"0"=>{"name"=>["Green", "Yellow"]}}, "_destroy"=>"false", "id"=>"5"}, "1"=>{"name"=>"2", "option_values_attributes"=>{"0"=>{"name"=>["Small", "Medium"]}}, "_destroy"=>"true", "id"=>"6"}}}, "commit"=>"Update Product", "id"=>"4"}
