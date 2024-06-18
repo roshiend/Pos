@@ -66,6 +66,7 @@ class OptionTypesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def option_type_params
-      params.fetch(:option_type, {})
+      params.require(:option_type).permit(:name)
     end
+
 end

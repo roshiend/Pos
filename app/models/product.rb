@@ -9,7 +9,7 @@ class Product < ApplicationRecord
 
     accepts_nested_attributes_for :option_types, allow_destroy: true
     #after_save :save_each_option_array_value_to_seperate_record
-    # after_save :update_or_create_variants
+     after_save :generate_variants
     
     # def update_or_create_variants
     #     option_value_combinations = self.generate_combinations
@@ -149,7 +149,29 @@ class Product < ApplicationRecord
     #   end
     # end
     
+    def generate_variants
+      option_type_value_groupings = {}
+  
+      option_types.each do |option_type|
+        option_type_value_groupings[option_type.id] =
+          option_type.option_values.map(&:id)
+      end
+  
+      all_value_ids = option_type_value_groupings.values
+      all_value_ids =
+        all_value_ids.inject(all_value_ids.shift) do |memo, value|
+          memo.product(value).map(&:flatten)
+      end
+  
+      all_value_ids.each do |value_ids|
+        variants.create(option_value_ids: value_ids, price: master_price)
+      end
+    end
     
+    
+    
+      
+      
     
       
      

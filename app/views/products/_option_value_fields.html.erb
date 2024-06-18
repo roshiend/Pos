@@ -1,0 +1,5 @@
+<div class="product-options-wrapperr" data-new-record="<%= o.object.new_record? %>">
+  
+  <%= o.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: o.object.map(&:name)), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: 'product-option-value-select', multiple: true %>
+
+</div>

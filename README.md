@@ -300,3 +300,8 @@ This approach ensures that each variant represents a unique combination of optio
   #     end
   #   end
   # end
+
+orginal timestamps
+
+  20240418085836 - option_value_variants
+  20240617095937 - option_type_values

@@ -1,0 +1,3 @@
+<div class="product-options-wrapper" data-new-record="<%= f.object.new_record? %>">
+  <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.id] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control', id: 'product-option-name-select' %>
+</div>

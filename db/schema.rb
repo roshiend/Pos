@@ -84,7 +84,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_18_085836) do
   end
 
   create_table "option_values", force: :cascade do |t|
-    t.string "name", default: [], null: false, array: true
+    t.string "name", null: false
     t.bigint "option_type_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

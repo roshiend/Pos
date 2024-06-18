@@ -1,6 +1,6 @@
 class ProductsController < ApplicationController
   before_action :set_product, only: %i[ show edit update destroy ]
-
+  
   # GET /products or /products.json
   def index
     @products = Product.all
@@ -14,21 +14,31 @@ class ProductsController < ApplicationController
   # GET /products/new
   def new
     @product = Product.new
-    
+    @option_types = OptionTypeSet.all
     
   end
 
   # GET /products/1/edit
   def edit
+    @option_types = OptionTypeSet.all
   end
 
   # POST /products or /products.json
   def create
-    @product = Product.new(product_params)
-   
+    @product = Product.new(product_params.except(:option_types_attributes))
+  
+    params[:product][:option_types_attributes].each do |index, option_type_params|
+      ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
+      option_type_params[:option_values_attributes].each do |i, option_value_params|
+        option_value_params[:name].each do |name|
+          puts "--------->>> #{name}"
+          ot.option_values.find_or_initialize_by(name: name)
+        end
+      end
+    end
+  
     respond_to do |format|
       if @product.save
-              
         format.html { redirect_to product_url(@product), notice: "Product was successfully created." }
         format.json { render :show, status: :created, location: @product }
       else
@@ -37,19 +47,42 @@ class ProductsController < ApplicationController
       end
     end
   end
+  
 
   # PATCH/PUT /products/1 or /products/1.json
   def update
-    respond_to do |format|
-      if @product.update(product_params)
+    @product = Product.find(params[:id])
+  
+    # Update product attributes except for option_types_attributes
+    if @product.update(product_params.except(:option_types_attributes))
+      # Handle option_types_attributes separately
+      params[:product][:option_types_attributes].each do |index, option_type_params|
+        ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
+        option_type_params[:option_values_attributes].each do |i, option_value_params|
+          option_value_params[:name].each do |name|
+            ov = ot.option_values.find_or_initialize_by(name: name)
+            # Update other attributes of option_value here if needed
+            ov.save if ov.new_record? || ov.changed?
+          end
+        end
+      end
+  
+      respond_to do |format|
         format.html { redirect_to product_url(@product), notice: "Product was successfully updated." }
         format.json { render :show, status: :ok, location: @product }
-      else
+      end
+    else
+      respond_to do |format|
         format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @product.errors, status: :unprocessable_entity }
       end
     end
   end
+  
+  
+  
+  
+  
 
   # DELETE /products/1 or /products/1.json
   def destroy
@@ -62,9 +95,9 @@ class ProductsController < ApplicationController
   end
 
   def create_variants
-     @product = Product.find_or_initialize_by(params[:product_id])
+    #@product = Product.find_or_initialize_by(params[:product_id])
 
-     combinations = Product.generate_combinations(params[:option_type_attributes])
+    # combinations = Product.generate_combinations(params[:option_type_attributes])
    
     
      #combinations.map! { |variant| variant.join(' / ') }
@@ -72,12 +105,12 @@ class ProductsController < ApplicationController
     #puts "combinations---->#{combinations}"
     
 
-    respond_to do |format|
-      format.turbo_stream do
-        render turbo_stream: turbo_stream.replace("variants-container", partial: "products/variants", locals: { combinations: combinations, product: @product })
-      end
-      format.html { redirect_to some_path } # Handle other formats if necessary
-    end
+    # respond_to do |format|
+    #   format.turbo_stream do
+    #     render turbo_stream: turbo_stream.replace("variants-container", partial: "products/variants", locals: { combinations: combinations, product: @product })
+    #   end
+    #   format.html { redirect_to some_path } # Handle other formats if necessary
+    # end
   end
   
   
@@ -90,8 +123,10 @@ class ProductsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id, :sku, :price,:unique_id],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id,name:[]]])
+      params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id, :sku, :price,:unique_id],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id, {name: []}, :_destroy]])
     end
+
+    
 
     
     
