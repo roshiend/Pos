@@ -75,7 +75,7 @@ export default class extends NestedForm {
     const addButton = this.element.querySelector('[data-action="product-options#add"]');
     addButton.style.display = visibleFields.length < 3 ? 'block' : 'none';
   
-    this.recalculateNestedFieldIndices();
+    //this.recalculateNestedFieldIndices();
   }
 
   recalculateNestedFieldIndices() {
@@ -134,28 +134,28 @@ export default class extends NestedForm {
         };
     });
     //Make a POST request to the server
-    // fetch('/create_variants', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'X-CSRF-Token': document.getElementsByName('csrf-token')[0].content
-    //   },
-    //   body: JSON.stringify({ option_type_attributes }),
-    // })
-    // .then(response => {
-    //   if (!response.ok) {
-    //     throw new Error('Network response was not ok');
-    //   }
-    //   return response.text(); // Assuming the response is HTML of the partial view
-    // })
-    // .then(data => {
-    //   console.log('Variants sent to server:', data);
-    //     // Update the view with the received HTML
-    //   this.element.querySelector('#variants-container').innerHTML = data;
-    // })
-    // .catch(error => {
-    //   console.error('Error sending variants to server:', error);
-    // });
+    fetch('/create_variants', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.getElementsByName('csrf-token')[0].content
+      },
+      body: JSON.stringify({ option_type_attributes }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.text(); // Assuming the response is HTML of the partial view
+    })
+    .then(data => {
+      console.log('Variants sent to server:', data);
+        // Update the view with the received HTML
+      this.element.querySelector('#variants-container').innerHTML = data;
+    })
+    .catch(error => {
+      console.error('Error sending variants to server:', error);
+    });
   }
   
 
@@ -188,7 +188,7 @@ addInputEventListeners(field, index) {
     const valuesValue = valuesInput.value.trim();
     // Check if values is not empty before triggering the update
     if (valuesValue !== '') {
-      //this.updateVariants();
+      this.updateVariants();
     }
   };
 

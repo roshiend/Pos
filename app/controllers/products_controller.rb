@@ -26,13 +26,25 @@ class ProductsController < ApplicationController
   # POST /products or /products.json
   def create
     @product = Product.new(product_params.except(:option_types_attributes))
-  
-    params[:product][:option_types_attributes].each do |index, option_type_params|
-      ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
-      option_type_params[:option_values_attributes].each do |i, option_value_params|
-        option_value_params[:name].each do |name|
-          puts "--------->>> #{name}"
-          ot.option_values.find_or_initialize_by(name: name)
+
+    if params[:product][:option_types_attributes].present?
+      params[:product][:option_types_attributes].each do |index, option_type_params|
+        next if option_type_params[:_destroy] == '1' # Skip any marked for destruction
+
+        if option_type_params[:name].present?
+          ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
+
+          if option_type_params[:option_values_attributes].present?
+            option_type_params[:option_values_attributes].each do |i, option_value_params|
+              if option_value_params[:name].present?
+                option_value_params[:name].each do |name|
+                  ov = ot.option_values.find_or_initialize_by(name: name)
+                  puts "------------->>> #{name}"
+                  #ov.save if ov.new_record? || ov.changed?
+                end
+              end
+            end
+          end
         end
       end
     end
@@ -56,13 +68,24 @@ class ProductsController < ApplicationController
     # Update product attributes except for option_types_attributes
     if @product.update(product_params.except(:option_types_attributes))
       # Handle option_types_attributes separately
-      params[:product][:option_types_attributes].each do |index, option_type_params|
-        ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
-        option_type_params[:option_values_attributes].each do |i, option_value_params|
-          option_value_params[:name].each do |name|
-            ov = ot.option_values.find_or_initialize_by(name: name)
-            # Update other attributes of option_value here if needed
-            ov.save if ov.new_record? || ov.changed?
+      if params[:product][:option_types_attributes].present?
+        params[:product][:option_types_attributes].each do |index, option_type_params|
+          next if option_type_params[:_destroy] == '1' # Skip any marked for destruction
+  
+          if option_type_params[:name].present?
+            ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
+  
+            if option_type_params[:option_values_attributes].present?
+              option_type_params[:option_values_attributes].each do |i, option_value_params|
+                if option_value_params[:name].present?
+                  option_value_params[:name].each do |name|
+                    ov = ot.option_values.find_or_initialize_by(name: name)
+                    puts "------------->>> #{name}"
+                    ov.save if ov.new_record? || ov.changed?
+                  end
+                end
+              end
+            end
           end
         end
       end
