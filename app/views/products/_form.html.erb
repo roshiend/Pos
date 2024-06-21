@@ -1,10 +1,8 @@
-<!--products/_form.html.erb-->
 <%= form_with(model: product, local: true, data: { controller: 'product-options', product_options_wrapper_selector_value: '.product-options-wrapper' }) do |form| %>
 
   <% if product.errors.any? %>
     <div style="color: red">
       <h2><%= pluralize(product.errors.count, "error") %> prohibited this product from being saved:</h2>
-
       <ul>
         <% product.errors.each do |error| %>
           <li><%= error.full_message %></li>
@@ -13,12 +11,29 @@
     </div>
   <% end %>
 
+  
+
   <template data-product-options-target="template">
-    <%= form.fields_for :option_types, OptionType.new, child_index: 'NEW_RECORD' do |p_options| %>
-      <%= render "product_option_feilds", f: p_options %>
-    <% end %>
+    <div class="option-type product-options-wrapper">
+      <%= form.fields_for :option_types, OptionType.new, child_index: 'NEW_RECORD' do |p_options| %>
+        <%= p_options.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.id] }, selected: p_options.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control', id: 'product-option-name-select_NEW_RECORD' %>
+
+        <%= p_options.fields_for :option_values, OptionValue.new, child_index: 'NEW_RECORD' do |ov| %>
+          <div class="option-value">
+            <%= ov.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: ov.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: 'product-option-value-select_NEW_RECORD', multiple: true %>
+          </div>
+        <% end %>
+
+        <!-- Hidden field to mark for destruction -->
+        <%= p_options.hidden_field :_destroy, value: 'false' %>
+
+        <!-- Remove button -->
+        <button type="button" data-action="product-options#removeOption">Remove Option</button>
+      <% end %>
+    </div>
   </template>
 
+  
 
   <div>
     <%= form.label :name, style: "display: block" %>
@@ -35,21 +50,13 @@
     <%= form.text_field  :master_price %>
   </div>
   <br>
+  <div data-product-options-target="container">
+    <!-- Existing option types and option values will be rendered here -->
+  </div>
+  <button type="button" data-action="product-options#addOption">Add Option</button>
+  <div id="variants-container"></div>
 
-  <%= form.fields_for :option_types do |p_options| %>
-    <div class="div-product-option-card">
-      <%= render "product_option_feilds", f: p_options %>
-    </div>
-  <% end %>
-  
-  <div data-product-options-target="target"></div>
-    <button type="button" data-action="product-options#add">Add Option</button>
-       <div id="variants-container"></div>
-      <!-- Iterate over combinations -->
-  
   <div>
     <%= form.submit %>
   </div>
 <% end %>
-
-  

@@ -306,6 +306,122 @@ orginal timestamps
   20240418085836 - option_value_variants
   20240617095937 - option_type_values
 
+selected: f.object.option_values.map(&:name)
+
+# POST /products or /products.json
+  def create
+    @product = Product.new(product_params)
+    
+
+    respond_to do |format|
+      if @product.save
+      
+
+        format.html { redirect_to product_url(@product), notice: "Product was successfully created." }
+        format.json { render :show, status: :created, location: @product }
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @product.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+  
+  # PATCH/PUT /products/1 or /products/1.json
+  def update
+    respond_to do |format|
+      if @product.update(product_params)
+        format.html { redirect_to product_url(@product), notice: "Product was successfully updated." }
+        format.json { render :show, status: :ok, location: @product }
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @product.errors, status: :unprocessable_entity }
+      end
+    end
+  end
 
 Processing by ProductsController#update as TURBO_STREAM
   Parameters: {"authenticity_token"=>"[FILTERED]", "product"=>{"name"=>"product", "description"=>"<div>asdasda</div>", "master_price"=>"120.0", "option_types_attributes"=>{"0"=>{"name"=>"1", "option_values_attributes"=>{"0"=>{"name"=>["Green", "Yellow"]}}, "_destroy"=>"false", "id"=>"5"}, "1"=>{"name"=>"2", "option_values_attributes"=>{"0"=>{"name"=>["Small", "Medium"]}}, "_destroy"=>"true", "id"=>"6"}}}, "commit"=>"Update Product", "id"=>"4"}
+
+  if i do this destroy will work  but, if i do ,
+  # POST /products or /products.json
+  def create
+    @product = Product.new(product_params.except(:option_types_attributes))
+
+    if params[:product][:option_types_attributes].present?
+      params[:product][:option_types_attributes].each do |index, option_type_params|
+        next if option_type_params[:_destroy] == '1' # Skip any marked for destruction
+
+        if option_type_params[:name].present?
+          ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
+
+          if option_type_params[:option_values_attributes].present?
+            option_type_params[:option_values_attributes].each do |i, option_value_params|
+              if option_value_params[:name].present?
+                option_value_params[:name].each do |name|
+                  ov = ot.option_values.find_or_initialize_by(name: name)
+                  puts "------------->>> #{name}"
+                  ov.save if ov.new_record? || ov.changed?
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  
+    respond_to do |format|
+      if @product.save
+        format.html { redirect_to product_url(@product), notice: "Product was successfully created." }
+        format.json { render :show, status: :created, location: @product }
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @product.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+  
+
+  # PATCH/PUT /products/1 or /products/1.json
+  def update
+    @product = Product.find(params[:id])
+  
+    # Update product attributes except for option_types_attributes
+    if @product.update(product_params.except(:option_types_attributes))
+      # Handle option_types_attributes separately
+      if params[:product][:option_types_attributes].present?
+        params[:product][:option_types_attributes].each do |index, option_type_params|
+          next if option_type_params[:_destroy] == '1' # Skip any marked for destruction
+  
+          if option_type_params[:name].present?
+            ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
+  
+            if option_type_params[:option_values_attributes].present?
+              option_type_params[:option_values_attributes].each do |i, option_value_params|
+                if option_value_params[:name].present?
+                  option_value_params[:name].each do |name|
+                    ov = ot.option_values.find_or_initialize_by(name: name)
+                    puts "------------->>> #{name}"
+                    ov.save if ov.new_record? || ov.changed?
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+  
+      respond_to do |format|
+        format.html { redirect_to product_url(@product), notice: "Product was successfully updated." }
+        format.json { render :show, status: :ok, location: @product }
+      end
+    else
+      respond_to do |format|
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @product.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  Processing by ProductsController#update as TURBO_STREAM
+  Parameters: {"authenticity_token"=>"[FILTERED]", "product"=>{"name"=>"product", "description"=>"<div>asdasda</div>", "master_price"=>"120.0", "option_types_attributes"=>{"0"=>{"name"=>"1", "option_values_attributes"=>{"0"=>{"name"=>["Green", "Yellow"]}}, "_destroy"=>"false", "id"=>"5"}, "1"=>{"name"=>"2", "option_values_attributes"=>{"0"=>{"name"=>["Small"]}}, "_destroy"=>"true", "id"=>"7"}}}, "commit"=>"Update Product", "id"=>"4"}
+  then destroy not working
