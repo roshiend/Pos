@@ -2,18 +2,16 @@ import NestedForm from 'stimulus-rails-nested-form';
 import SlimSelect from 'slim-select';
 
 export default class extends NestedForm {
-  static targets = ["template", "container"];
+  static targets = ["template", "container", "valueTemplate", "valueContainer"];
 
   connect() {
     super.connect();
     console.log('Controller loaded!');
     this.updateAddButtonVisibility();
 
-    // Initialize Slim Select on all existing elements
     const existingSelectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
     this.initializeSlimSelect(existingSelectElements);
 
-    // Add event listeners for input changes
     this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
       this.addInputEventListeners(field);
     });
@@ -46,7 +44,6 @@ export default class extends NestedForm {
 
       const newField = this.containerTarget.lastElementChild;
       const selectElements = newField.querySelectorAll('.product-option-value-select, .product-option-name-select');
-      // Initialize Slim Select for the new field
       this.initializeSlimSelect(selectElements);
       this.addInputEventListeners(newField);
 
@@ -54,6 +51,22 @@ export default class extends NestedForm {
     } else {
       console.log('Maximum number of fields reached.');
     }
+  }
+
+  addValue(event) {
+    event.preventDefault();
+    const button = event.target;
+    const optionTypeWrapper = button.closest('.option-type');
+    const valueContainer = optionTypeWrapper.querySelector('[data-product-options-target="valueContainer"]');
+    const templateContent = this.valueTemplateTarget.innerHTML;
+
+    const newIndex = new Date().getTime();
+    const newTemplateContent = templateContent.replace(/NEW_RECORD/g, newIndex);
+
+    valueContainer.insertAdjacentHTML('beforeend', newTemplateContent);
+
+    const newField = valueContainer.lastElementChild.querySelector('.product-option-value-select');
+    this.initializeSlimSelect([newField]);
   }
 
   removeOption(event) {
@@ -83,14 +96,13 @@ export default class extends NestedForm {
     const handleInputChange = () => {
       const nameValue = nameInput.value.trim();
       const valuesValue = valuesInput.value.trim();
-      // Check if values is not empty before triggering the update
       if (valuesValue !== '') {
         this.updateVariants();
       }
     };
 
     if (valuesInput) {
-      valuesInput.addEventListener('change', handleInputChange); // Use 'change' event instead of 'input'
+      valuesInput.addEventListener('change', handleInputChange);
     } else {
       console.error('Values input not found:', field);
     }
@@ -103,12 +115,10 @@ export default class extends NestedForm {
       const checkedOptions = field.querySelectorAll('[name*="[option_values_attributes]"][name*="[name]"] option:checked');
       let optionValues = [];
 
-      // Collect all checked option values into an array
       Array.from(checkedOptions).forEach(option => {
         optionValues.push(option.value);
       });
 
-      // Store each option type with its corresponding indexed option values
       option_type_attributes[index] = {
         name: optionTypeName,
         option_values_attributes: {
@@ -116,7 +126,7 @@ export default class extends NestedForm {
         }
       };
     });
-    // Make a POST request to the server
+
     fetch('/create_variants', {
       method: 'POST',
       headers: {
@@ -129,15 +139,15 @@ export default class extends NestedForm {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      return response.text(); // Assuming the response is HTML of the partial view
+      return response.text();
     })
     .then(data => {
       console.log('Variants sent to server:', data);
-      // Update the view with the received HTML
       this.element.querySelector('#variants-container').innerHTML = data;
     })
     .catch(error => {
       console.error('Error sending variants to server:', error);
+      alert('An error occurred while updating variants. Please try again.');
     });
   }
 }

@@ -425,3 +425,7 @@ Processing by ProductsController#update as TURBO_STREAM
   Processing by ProductsController#update as TURBO_STREAM
   Parameters: {"authenticity_token"=>"[FILTERED]", "product"=>{"name"=>"product", "description"=>"<div>asdasda</div>", "master_price"=>"120.0", "option_types_attributes"=>{"0"=>{"name"=>"1", "option_values_attributes"=>{"0"=>{"name"=>["Green", "Yellow"]}}, "_destroy"=>"false", "id"=>"5"}, "1"=>{"name"=>"2", "option_values_attributes"=>{"0"=>{"name"=>["Small"]}}, "_destroy"=>"true", "id"=>"7"}}}, "commit"=>"Update Product", "id"=>"4"}
   then destroy not working
+
+i think its fined by the option_type_id , i think nedd to find by the primary id
+
+i want to be it like product[option_types_attributes][0][option_values_attributes][0][name],product[option_types_attributes][0][option_values_attributes][1][name]product[option_types_attributes][0][option_values_attributes][2][name] when field auto matically added it should be like that

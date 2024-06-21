@@ -11,18 +11,20 @@
     </div>
   <% end %>
 
-  
-
   <template data-product-options-target="template">
     <div class="option-type product-options-wrapper">
       <%= form.fields_for :option_types, OptionType.new, child_index: 'NEW_RECORD' do |p_options| %>
         <%= p_options.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.id] }, selected: p_options.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control', id: 'product-option-name-select_NEW_RECORD' %>
 
-        <%= p_options.fields_for :option_values, OptionValue.new, child_index: 'NEW_RECORD' do |ov| %>
-          <div class="option-value">
-            <%= ov.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: ov.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: 'product-option-value-select_NEW_RECORD', multiple: true %>
-          </div>
-        <% end %>
+        <div data-product-options-target="valueContainer">
+          <%= p_options.fields_for :option_values, OptionValue.new, child_index: 'NEW_RECORD' do |ov| %>
+            <div class="option-value">
+              <%= ov.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: ov.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: 'product-option-value-select_NEW_RECORD', multiple: true %>
+            </div>
+          <% end %>
+        </div>
+
+        <button type="button" data-action="product-options#addValue">Add Value</button>
 
         <!-- Hidden field to mark for destruction -->
         <%= p_options.hidden_field :_destroy, value: 'false' %>
@@ -33,7 +35,13 @@
     </div>
   </template>
 
-  
+  <template data-product-options-target="valueTemplate">
+    <div class="option-value">
+      <%= form.fields_for :option_values, OptionValue.new, child_index: 'NEW_RECORD' do |ov| %>
+        <%= ov.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: ov.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: 'product-option-value-select_NEW_RECORD', multiple: true %>
+      <% end %>
+    </div>
+  </template>
 
   <div>
     <%= form.label :name, style: "display: block" %>
@@ -42,18 +50,19 @@
 
   <div>
     <%= form.label :description, style: "display: block" %>
-    <%= form.rich_text_area  :description %>
+    <%= form.rich_text_area :description %>
   </div>
 
   <div>
     <%= form.label :master_price, style: "display: block" %>
-    <%= form.text_field  :master_price %>
+    <%= form.text_field :master_price %>
   </div>
   <br>
   <div data-product-options-target="container">
     <!-- Existing option types and option values will be rendered here -->
   </div>
   <button type="button" data-action="product-options#addOption">Add Option</button>
+  
   <div id="variants-container"></div>
 
   <div>
