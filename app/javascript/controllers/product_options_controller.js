@@ -60,8 +60,10 @@ export default class extends NestedForm {
     const valueContainer = optionTypeWrapper.querySelector('[data-product-options-target="valueContainer"]');
     const templateContent = this.valueTemplateTarget.innerHTML;
 
-    const newIndex = new Date().getTime();
-    const newTemplateContent = templateContent.replace(/NEW_RECORD/g, newIndex);
+    const existingValueFields = valueContainer.querySelectorAll('.option-value');
+    const newIndex = existingValueFields.length;
+
+    const newTemplateContent = templateContent.replace(/NEW_VALUE_RECORD/g, newIndex);
 
     valueContainer.insertAdjacentHTML('beforeend', newTemplateContent);
 

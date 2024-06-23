@@ -19,7 +19,7 @@
         <div data-product-options-target="valueContainer">
           <%= p_options.fields_for :option_values, OptionValue.new, child_index: 'NEW_RECORD' do |ov| %>
             <div class="option-value">
-              <%= ov.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: ov.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: 'product-option-value-select_NEW_RECORD', multiple: true %>
+              <%= ov.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: ov.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: 'product-option-value-select_NEW_VALUE_RECORD', multiple: true %>
             </div>
           <% end %>
         </div>
@@ -31,14 +31,14 @@
 
         <!-- Remove button -->
         <button type="button" data-action="product-options#removeOption">Remove Option</button>
-      <% end %>
-    </div>
-  </template>
 
-  <template data-product-options-target="valueTemplate">
-    <div class="option-value">
-      <%= form.fields_for :option_values, OptionValue.new, child_index: 'NEW_RECORD' do |ov| %>
-        <%= ov.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: ov.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: 'product-option-value-select_NEW_RECORD', multiple: true %>
+        <template data-product-options-target="valueTemplate">
+          <div class="option-value">
+            <%= p_options.fields_for :option_values, OptionValue.new, child_index: 'NEW_VALUE_RECORD' do |ov| %>
+              <%= ov.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: ov.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: 'product-option-value-select_NEW_VALUE_RECORD', multiple: true %>
+            <% end %>
+          </div>
+        </template>
       <% end %>
     </div>
   </template>
@@ -62,7 +62,7 @@
     <!-- Existing option types and option values will be rendered here -->
   </div>
   <button type="button" data-action="product-options#addOption">Add Option</button>
-  
+
   <div id="variants-container"></div>
 
   <div>
