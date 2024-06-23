@@ -25,28 +25,28 @@ class ProductsController < ApplicationController
   end
 
   def create
-    @product = Product.new(product_params.except(:option_types_attributes))
+    @product = Product.new(product_params)
   
-    if params[:product][:option_types_attributes].present?
-      params[:product][:option_types_attributes].each do |index, option_type_params|
-        next if option_type_params[:_destroy] == '1' # Skip any marked for destruction
+    # if params[:product][:option_types_attributes].present?
+    #   params[:product][:option_types_attributes].each do |index, option_type_params|
+    #     next if option_type_params[:_destroy] == '1' # Skip any marked for destruction
   
-        if option_type_params[:name].present?
-          ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
+    #     if option_type_params[:name].present?
+    #       ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
   
-          if option_type_params[:option_values_attributes].present?
-            option_type_params[:option_values_attributes].each do |i, option_value_params|
-              if option_value_params[:name].present?
-                option_value_params[:name].each do |name|
-                  ov = ot.option_values.find_or_initialize_by(name: name)
-                  ov.save if ov.new_record? || ov.changed?
-                end
-              end
-            end
-          end
-        end
-      end
-    end
+    #       if option_type_params[:option_values_attributes].present?
+    #         option_type_params[:option_values_attributes].each do |i, option_value_params|
+    #           if option_value_params[:name].present?
+    #             option_value_params[:name].each do |name|
+    #               ov = ot.option_values.find_or_initialize_by(name: name)
+    #               ov.save if ov.new_record? || ov.changed?
+    #             end
+    #           end
+    #         end
+    #       end
+    #     end
+    #   end
+    # end
   
     respond_to do |format|
       if @product.save
@@ -63,40 +63,8 @@ class ProductsController < ApplicationController
   
     # PATCH/PUT /products/1 or /products/1.json
     def update
-      @product = Product.find(params[:id])
-    
-      if @product.update(product_params.except(:option_types_attributes))
-        if params[:product][:option_types_attributes].present?
-          params[:product][:option_types_attributes].each do |index, option_type_params|
-            if option_type_params[:_destroy] == '1'
-              ot = @product.option_types.find(option_type_params[:id])
-              ot.destroy if ot
-              next
-            end
-    
-            if option_type_params[:name].present?
-              ot = @product.option_types.find_or_initialize_by(id: option_type_params[:id])
-              ot.update(name: option_type_params[:name])
-    
-              if option_type_params[:option_values_attributes].present?
-                option_type_params[:option_values_attributes].each do |i, option_value_params|
-                  if option_value_params[:_destroy] == '1'
-                    ov = ot.option_values.find(option_value_params[:id])
-                    ov.destroy if ov
-                    next
-                  end
-    
-                  # Assuming each option value has a unique name
-                  if option_value_params[:name].present?
-                    ov = ot.option_values.find_or_initialize_by(id: option_value_params[:id])
-                    ov.update(name: option_value_params[:name]) if ov.new_record? || ov.changed?
-                  end
-                end
-              end
-            end
-          end
-        end
-    
+      
+      if @product.update(product_params)
         respond_to do |format|
           format.html { redirect_to product_url(@product), notice: "Product was successfully updated." }
           format.json { render :show, status: :ok, location: @product }
@@ -154,7 +122,7 @@ class ProductsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id, :sku, :price,:unique_id],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id,{ name:[ ] }, :_destroy]])
+      params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id, :sku, :price,:unique_id],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id,:name, :_destroy]])
     end
 
     
