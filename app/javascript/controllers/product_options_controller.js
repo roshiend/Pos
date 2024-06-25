@@ -15,6 +15,9 @@ export default class extends NestedForm {
     this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
       this.addInputEventListeners(field);
     });
+
+    // Update delete button visibility
+    this.updateDeleteButtonVisibility();
   }
   
   initializeSlimSelect(elements) {
@@ -46,6 +49,9 @@ export default class extends NestedForm {
       this.initializeSlimSelect(selectElements);
       this.addInputEventListeners(newField);
       this.updateAddButtonVisibility();
+
+      // Update delete button visibility
+      this.updateDeleteButtonVisibility();
     } else {
       console.log('Maximum number of fields reached.');
     }
@@ -57,7 +63,7 @@ export default class extends NestedForm {
     const valueContainer = wrapper.querySelector('[data-product-options-target="valueContainer"]');
     const valueTemplate = wrapper.querySelector('[data-product-options-target="valueTemplate"]').innerHTML;
 
-    const existingValueFields = valueContainer.querySelectorAll('.option-value');
+    const existingValueFields = valueContainer.querySelectorAll('.option-value:not([style*="display: none"])');
     const newValueIndex = existingValueFields.length;
 
     const newValueContent = valueTemplate.replace(/NEW_VALUE_RECORD/g, newValueIndex);
@@ -68,21 +74,45 @@ export default class extends NestedForm {
     
     // Initialize Slim Select for the new value field
     this.initializeSlimSelect(selectElements);
-    this.addInputEventListeners(wrapper); // Assuming wrapper contains all the event listeners
+    this.addInputEventListeners(wrapper);
+
+    // Update delete button visibility
+    this.updateDeleteButtonVisibility();
+  }
+
+  removeValue(event) {
+    const valueField = event.target.closest('.option-value');
+    if (valueField) {
+      valueField.querySelector('[name*="[_destroy]"]').value = "1";
+      valueField.style.display = 'none';
+      this.updateDeleteButtonVisibility();
+    }
+  }
+
+  updateDeleteButtonVisibility() {
+    this.element.querySelectorAll('.product-options-wrapper').forEach((wrapper) => {
+      const visibleValues = wrapper.querySelectorAll('.option-value:not([style*="display: none"])');
+      visibleValues.forEach((field, index) => {
+        const deleteButton = field.querySelector('.delete-value-button');
+        if (visibleValues.length > 1) {
+          deleteButton.style.display = 'inline';
+        } else {
+          deleteButton.style.display = 'none';
+        }
+      });
+    });
   }
 
   remove(event) {
     const wrapper = event.target.closest('.product-options-wrapper');
-  
     if (wrapper) {
       wrapper.querySelector('[name*="[_destroy]"]').value = "1";
       wrapper.style.display = 'none';
-  
       this.updateAddButtonVisibility();
       this.updateVariants();
     }
   }
-  
+
   updateAddButtonVisibility() {
     const visibleFields = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])'));
     const addButton = this.element.querySelector('[data-action="product-options#add"]');
@@ -92,22 +122,22 @@ export default class extends NestedForm {
   updateVariants() {
     const option_type_attributes = {};
     Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
-        const optionTypeName = field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value;
-        const checkedOptions = field.querySelectorAll('[name*="[option_values_attributes]"][name*="[name]"] option:checked');
-        let optionValues = [];
+      const optionTypeName = field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value;
+      const checkedOptions = field.querySelectorAll('[name*="[option_values_attributes]"][name*="[name]"] option:checked');
+      let optionValues = [];
 
-        // Collect all checked option values into an array
-        Array.from(checkedOptions).forEach(option => {
-            optionValues.push(option.value);
-        });
+      // Collect all checked option values into an array
+      Array.from(checkedOptions).forEach(option => {
+        optionValues.push(option.value);
+      });
 
-        // Store each option type with its corresponding indexed option values
-        option_type_attributes[index] = {
-            name: optionTypeName,
-            option_values_attributes: {
-                [index]: { name: optionValues }
-            }
-        };
+      // Store each option type with its corresponding indexed option values
+      option_type_attributes[index] = {
+        name: optionTypeName,
+        option_values_attributes: {
+          [index]: { name: optionValues }
+        }
+      };
     });
     // Make a POST request to the server
     fetch('/create_variants', {
