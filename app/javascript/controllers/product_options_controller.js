@@ -57,9 +57,7 @@ export default class extends NestedForm {
     }
   }
 
-  addValue(event) {
-    const button = event.target;
-    const wrapper = button.closest('.product-options-wrapper');
+  addValue(wrapper) {
     const valueContainer = wrapper.querySelector('[data-product-options-target="valueContainer"]');
     const valueTemplate = wrapper.querySelector('[data-product-options-target="valueTemplate"]').innerHTML;
 
@@ -166,20 +164,22 @@ export default class extends NestedForm {
 
   addInputEventListeners(field) {
     const nameInput = field.querySelector('.product-option-name-select');
-    const valuesInput = field.querySelector('.product-option-value-select');
+    const valuesInput = field.querySelectorAll('.product-option-value-select');
 
-    const handleInputChange = () => {
-      const nameValue = nameInput.value.trim();
-      const valuesValue = valuesInput.value.trim();
-      if (valuesValue !== '') {
-        this.updateVariants();
-      }
-    };
-
-    if (valuesInput) {
-      valuesInput.addEventListener('change', handleInputChange);
-    } else {
-      console.error('Values input not found:', field);
-    }
+    valuesInput.forEach((input) => {
+      input.addEventListener('change', () => {
+        const nameValue = nameInput.value.trim();
+        const valuesValue = input.value.trim();
+        if (valuesValue !== '') {
+          this.updateVariants();
+          const valueContainer = field.querySelector('[data-product-options-target="valueContainer"]');
+          const visibleValueFields = valueContainer.querySelectorAll('.option-value:not([style*="display: none"])');
+          const lastVisibleValueField = visibleValueFields[visibleValueFields.length - 1];
+          if (input === lastVisibleValueField.querySelector('.product-option-value-select')) {
+            this.addValue(field.closest('.product-options-wrapper')); // Automatically add a new value field
+          }
+        }
+      });
+    });
   }
 }
