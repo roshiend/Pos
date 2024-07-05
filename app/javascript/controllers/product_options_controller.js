@@ -103,15 +103,35 @@ export default class extends NestedForm {
     });
   }
 
+  // remove(event) {
+  //   const wrapper = event.target.closest('.product-options-wrapper');
+  //   if (wrapper) {
+  //     wrapper.querySelector('[name*="[_destroy]"]').value = "1";
+  //     wrapper.style.display = 'none';
+  //     this.updateAddButtonVisibility();
+  //     this.updateVariants();
+  //   }
+  // }
+
   remove(event) {
     const wrapper = event.target.closest('.product-options-wrapper');
     if (wrapper) {
+      // Mark all associated option values for destruction
+      wrapper.querySelectorAll('.option-value').forEach((valueField) => {
+        valueField.querySelector('[name*="[_destroy]"]').value = "1";
+        valueField.style.display = 'none';
+      });
+  
+      // Mark the option type for destruction
       wrapper.querySelector('[name*="[_destroy]"]').value = "1";
       wrapper.style.display = 'none';
+  
       this.updateAddButtonVisibility();
       this.updateVariants();
     }
   }
+
+  
 
   updateAddButtonVisibility() {
     const visibleFields = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])'));

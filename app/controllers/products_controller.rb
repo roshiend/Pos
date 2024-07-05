@@ -26,34 +26,13 @@ class ProductsController < ApplicationController
 
   def create
     @product = Product.new(product_params)
-  
-    # if params[:product][:option_types_attributes].present?
-    #   params[:product][:option_types_attributes].each do |index, option_type_params|
-    #     next if option_type_params[:_destroy] == '1' # Skip any marked for destruction
-  
-    #     if option_type_params[:name].present?
-    #       ot = @product.option_types.find_or_initialize_by(name: option_type_params[:name])
-  
-    #       if option_type_params[:option_values_attributes].present?
-    #         option_type_params[:option_values_attributes].each do |i, option_value_params|
-    #           if option_value_params[:name].present?
-    #             option_value_params[:name].each do |name|
-    #               ov = ot.option_values.find_or_initialize_by(name: name)
-    #               ov.save if ov.new_record? || ov.changed?
-    #             end
-    #           end
-    #         end
-    #       end
-    #     end
-    #   end
-    # end
-  
+
     respond_to do |format|
       if @product.save
-        format.html { redirect_to product_url(@product), notice: "Product was successfully created." }
+        format.html { redirect_to @product, notice: 'Product was successfully created.' }
         format.json { render :show, status: :created, location: @product }
       else
-        format.html { render :new, status: :unprocessable_entity }
+        format.html { render :new }
         format.json { render json: @product.errors, status: :unprocessable_entity }
       end
     end
@@ -63,15 +42,12 @@ class ProductsController < ApplicationController
   
     # PATCH/PUT /products/1 or /products/1.json
     def update
-      
-      if @product.update(product_params)
-        respond_to do |format|
-          format.html { redirect_to product_url(@product), notice: "Product was successfully updated." }
+      respond_to do |format|
+        if @product.update(product_params)
+          format.html { redirect_to @product, notice: 'Product was successfully updated.' }
           format.json { render :show, status: :ok, location: @product }
-        end
-      else
-        respond_to do |format|
-          format.html { render :edit, status: :unprocessable_entity }
+        else
+          format.html { render :edit }
           format.json { render json: @product.errors, status: :unprocessable_entity }
         end
       end
