@@ -1,10 +1,12 @@
 <div class="product-options-wrapper">
-  <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.id] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control', id: "product-option-name-select_#{f.index}" %>
+  <% cache "option_type_list" do %>
+    <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.id] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control', id: "product-option-name-select_#{f.index}" %>
+  <% end %>
   
   <div data-product-options-target="valueContainer">
     <%= f.fields_for :option_values, (f.object.option_values.any? ? f.object.option_values : f.object.option_values.build) do |option_value| %>
       <div class="option-value">
-        <%= option_value.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: option_value.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: "product-option-value-select_#{f.index}_#{option_value.index}", multiple: false %>
+        <%= option_value.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: option_value.object.name), { include_hidden: false, prompt: 'Select value' }, class: 'product-option-value-select form-control select2', id: "product-option-value-select_#{f.index}_#{option_value.index}", multiple: false, prompt: "Please Select"%>
         <button type="button" class="delete-value-button" data-action="product-options#removeValue" style="display: none;">Delete Value</button>
         <%= option_value.hidden_field :_destroy %>
       </div>
@@ -17,7 +19,7 @@
   <template data-product-options-target="valueTemplate">
     <div class="option-value">
       <%= f.fields_for :option_values, OptionValue.new, child_index: "NEW_VALUE_RECORD" do |option_value| %>
-        <%= option_value.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: option_value.object.name), { include_hidden: false }, class: 'product-option-value-select form-control select2', id: "product-option-value-select_#{f.index}_NEW_VALUE_RECORD", multiple: false %>
+        <%= option_value.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: option_value.object.name), { include_hidden: false,prompt: 'Select value' }, class: 'product-option-value-select form-control select2', id: "product-option-value-select_#{f.index}_NEW_VALUE_RECORD", multiple: false %>
         <button type="button" class="delete-value-button" data-action="product-options#removeValue" style="display: none;">Delete Value</button>
         <%= option_value.hidden_field :_destroy %>
       <%end%>

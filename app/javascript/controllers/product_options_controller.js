@@ -52,6 +52,7 @@ export default class extends NestedForm {
 
       // Update delete button visibility
       this.updateDeleteButtonVisibility();
+      this.updateVariants();
     } else {
       console.log('Maximum number of fields reached.');
     }
@@ -74,10 +75,11 @@ export default class extends NestedForm {
     
     // Initialize Slim Select for the new value field
     this.initializeSlimSelect(selectElements);
-    this.addInputEventListeners(wrapper);
-
+    this.addInputEventListeners(newField);
+    
     // Update delete button visibility
     this.updateDeleteButtonVisibility();
+    this.updateVariants();
   }
 
   removeValue(event) {
@@ -86,6 +88,7 @@ export default class extends NestedForm {
       valueField.querySelector('[name*="[_destroy]"]').value = "1";
       valueField.style.display = 'none';
       this.updateDeleteButtonVisibility();
+      this.updateVariants();
     }
   }
 
@@ -102,16 +105,6 @@ export default class extends NestedForm {
       });
     });
   }
-
-  // remove(event) {
-  //   const wrapper = event.target.closest('.product-options-wrapper');
-  //   if (wrapper) {
-  //     wrapper.querySelector('[name*="[_destroy]"]').value = "1";
-  //     wrapper.style.display = 'none';
-  //     this.updateAddButtonVisibility();
-  //     this.updateVariants();
-  //   }
-  // }
 
   remove(event) {
     const wrapper = event.target.closest('.product-options-wrapper');
@@ -131,8 +124,6 @@ export default class extends NestedForm {
     }
   }
 
-  
-
   updateAddButtonVisibility() {
     const visibleFields = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])'));
     const addButton = this.element.querySelector('[data-action="product-options#add"]');
@@ -143,22 +134,25 @@ export default class extends NestedForm {
     const option_type_attributes = {};
     Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')).forEach((field, index) => {
       const optionTypeName = field.querySelector('[name*="[option_types_attributes]"][name*="[name]"]').value;
-      const checkedOptions = field.querySelectorAll('[name*="[option_values_attributes]"][name*="[name]"] option:checked');
-      let optionValues = [];
+      const optionValues = field.querySelectorAll('.option-value:not([style*="display: none"])');
+      let indexedOptionValuesAttributes = {};
 
-      // Collect all checked option values into an array
-      Array.from(checkedOptions).forEach(option => {
-        optionValues.push(option.value);
+      optionValues.forEach((valueField, idx) => {
+        const destroyField = valueField.querySelector('[name*="[_destroy]"]');
+        if (destroyField && destroyField.value === "1") return;
+
+        const option = valueField.querySelector('[name*="[option_values_attributes]"][name*="[name]"] option:checked');
+        if (option) {
+          indexedOptionValuesAttributes[idx] = { name: option.value };
+        }
       });
 
-      // Store each option type with its corresponding indexed option values
       option_type_attributes[index] = {
         name: optionTypeName,
-        option_values_attributes: {
-          [index]: { name: optionValues }
-        }
+        option_values_attributes: indexedOptionValuesAttributes
       };
     });
+
     // Make a POST request to the server
     fetch('/create_variants', {
       method: 'POST',
@@ -189,17 +183,19 @@ export default class extends NestedForm {
     const valuesInput = field.querySelector('.product-option-value-select');
 
     const handleInputChange = () => {
-      const nameValue = nameInput.value.trim();
-      const valuesValue = valuesInput.value.trim();
-      if (valuesValue !== '') {
+      const nameValue = nameInput ? nameInput.value.trim() : "";
+      const valuesValue = valuesInput ? valuesInput.value.trim() : "";
+      if (nameValue !== '' || valuesValue !== '') {
         this.updateVariants();
       }
     };
 
     if (valuesInput) {
       valuesInput.addEventListener('change', handleInputChange);
-    } else {
-      console.error('Values input not found:', field);
+    }
+
+    if (nameInput) {
+      nameInput.addEventListener('change', handleInputChange);
     }
   }
 }

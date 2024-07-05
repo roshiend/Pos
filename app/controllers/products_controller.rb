@@ -20,7 +20,9 @@ class ProductsController < ApplicationController
 
   # GET /products/1/edit
   def edit
-    @option_types = OptionTypeSet.all
+    @option_type_set = Rails.cache.fetch('option_type_set', expires_in: 12.hours) do
+      OptionTypeSet.all.to_a
+    end
     
   end
 
@@ -93,7 +95,7 @@ class ProductsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_product
-      @product = Product.find(params[:id])
+      @product = Product.includes(option_types: :option_values).find(params[:id])
     end
 
     # Only allow a list of trusted parameters through.

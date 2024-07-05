@@ -16,6 +16,12 @@
     <% end %>
   </template>
 
+  <template data-product-options-target="ttemplate">
+    <%= form.fields_for :variants, Variant.new, child_index: 'NEW_RECORD' do |v| %>
+      <%= render "variants", f: v %>
+    <% end %>
+  </template>
+
   <div>
     <%= form.label :name, style: "display: block" %>
     <%= form.text_field :name %>
@@ -35,6 +41,12 @@
   <%= form.fields_for :option_types do |p_options| %>
     <div class="div-product-option-card">
       <%= render "product_option_fields", f: p_options %>
+    </div>
+  <% end %>
+
+  <%= form.fields_for :varinats do |v| %>
+    <div class="div-product-option-card">
+      <%= render "variants", f: v %>
     </div>
   <% end %>
   
