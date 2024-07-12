@@ -1,28 +1,20 @@
 class Variant < ApplicationRecord
-  belongs_to :product
+  belongs_to :product, optional: true
   has_many :option_value_variants, dependent: :destroy
   has_many :option_values, through: :option_value_variants
+
+  accepts_nested_attributes_for :option_value_variants, allow_destroy: true
+
   validate :uniqueness_of_option_values
 
   private
 
   def uniqueness_of_option_values
-    other_variants = product.variants.where.not(id: self.id)
+    existing_variants = product.variants.includes(:option_values)
+    existing_combinations = existing_variants.map { |variant| variant.option_values.pluck(:id).sort }
 
-    other_variants.each do |variant|
-      if variant.option_values.sort == self.option_values.sort
-        errors.add(:option_values, "already exist on a variant")
-      end
-    end
-
-    if option_values.uniq.length != option_values.length
-      errors.add(:option_values, "must be unique")
+    if existing_combinations.include?(option_value_ids.sort)
+      errors.add(:base, 'Combination of option values already exists')
     end
   end
-
-
-  
-  
-  
 end
-

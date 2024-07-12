@@ -44,16 +44,10 @@
     </div>
   <% end %>
 
-  <%= form.fields_for :varinats do |v| %>
-    <div class="div-product-option-card">
-      <%= render "variants", f: v %>
-    </div>
-  <% end %>
-  
   <div data-product-options-target="target"></div>
   <button type="button" data-action="product-options#add">Add Option</button>
   <div id="variants-container"></div>
-  
+
   <div>
     <%= form.submit %>
   </div>

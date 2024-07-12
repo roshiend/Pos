@@ -505,3 +505,22 @@ product[option_types_attributes][2][option_values_attributes][0][name] )
 
 product[option_types_attributes][2][option_values_attributes][1][name]
 product[option_types_attributes][2][option_values_attributes][2][name] so on..
+
+Product model
+
+  has_many :variants, dependent: :destroy, class_name: 'ProductVariant' , order: 'position asc'
+  has_many :options , dependent: :destroy, class_name: 'ProductOption', order: 'position asc'
+  accepts_nested_attributes_for :variants, allow_destroy: true
+  accepts_nested_attributes_for :options, allow_destroy: true
+  attibutes - name,body,price 
+               
+
+product_options model
+  belongs_to :product
+  attibutes - option_type, option_value 
+
+Varinats model
+belongs_to :product
+attributes - option1,option2,option3,sku,weight
+
+based on selected option_type, option_value  variants should generate 

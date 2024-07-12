@@ -27,16 +27,14 @@ class ProductsController < ApplicationController
   end
 
   def create
+    logger.debug "Product params: #{product_params.inspect}"
     @product = Product.new(product_params)
-
-    respond_to do |format|
-      if @product.save
-        format.html { redirect_to @product, notice: 'Product was successfully created.' }
-        format.json { render :show, status: :created, location: @product }
-      else
-        format.html { render :new }
-        format.json { render json: @product.errors, status: :unprocessable_entity }
-      end
+    if @product.save
+      create_option_value_variants(@product)
+      redirect_to @product, notice: 'Product was successfully created.'
+    else
+      logger.debug "Product errors: #{@product.errors.full_messages}"
+      render :new
     end
   end
   
@@ -72,14 +70,14 @@ class ProductsController < ApplicationController
   end
 
   def create_variants
-    #@product = Product.find_or_initialize_by(params[:product_id])
+    # @product = Product.find_or_initialize_by(params[:product_id])
 
-    # combinations = Product.generate_combinations(params[:option_type_attributes])
+    # combinations = Product.generate_variants(params[:option_type_attributes])
    
     
-     #combinations.map! { |variant| variant.join(' / ') }
+    #  combinations.map! { |variant| variant.join(' / ') }
 
-    #puts "combinations---->#{combinations}"
+    # puts "combinations---->#{combinations}"
     
 
     # respond_to do |format|
@@ -88,6 +86,18 @@ class ProductsController < ApplicationController
     #   end
     #   format.html { redirect_to some_path } # Handle other formats if necessary
     # end
+    option_type_attributes = params[:option_type_attributes]
+
+    # Assuming you have a Product model and a method to generate variants
+    
+
+    # Call the generate_variants method with the option_type_attributes
+    Product.generate_variants(option_type_attributes)
+
+    # Render the updated variants partial view
+    respond_to do |format|
+      format.html { render partial: 'variants' }
+    end
   end
   
   
@@ -100,8 +110,18 @@ class ProductsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id, :sku, :price,:unique_id],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id,:name, :_destroy]])
+      params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id, :sku, :price,:unique_id,option_value_ids: []],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id,:name, :_destroy]])
     end
+
+    def create_option_value_variants(product)
+      product.variants.each do |variant|
+        option_value_ids = params[:product][:variants_attributes][variant.id.to_s][:option_value_ids]
+        option_value_ids.each do |option_value_id|
+          OptionValueVariant.create(variant: variant, option_value_id: option_value_id)
+        end if option_value_ids
+      end
+    end
+
 
     
 

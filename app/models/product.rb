@@ -8,40 +8,41 @@ class Product < ApplicationRecord
     validates :description, presence: true
 
     accepts_nested_attributes_for :option_types, allow_destroy: true
+    accepts_nested_attributes_for :variants, allow_destroy: true
     #
-     after_save :generate_variants
+    # after_save :generate_variants
     
     
-    def generate_variants
-      option_type_value_groupings = {}
+    # def generate_variants
+    #   option_type_value_groupings = {}
     
-      # Only proceed if there are option types
-      if option_types.any?
-        option_types.each do |option_type|
-          # Only add to groupings if there are option values
-          if option_type.option_values.any?
-            option_type_value_groupings[option_type.id] =
-              option_type.option_values.map(&:id)
-          end
-        end
+    #   # Only proceed if there are option types
+    #   if option_types.any?
+    #     option_types.each do |option_type|
+    #       # Only add to groupings if there are option values
+    #       if option_type.option_values.any?
+    #         option_type_value_groupings[option_type.id] =
+    #           option_type.option_values.map(&:id)
+    #       end
+    #     end
     
-        # Only proceed if there are groupings
-        if option_type_value_groupings.any?
-          all_value_ids = option_type_value_groupings.values
+    #     # Only proceed if there are groupings
+    #     if option_type_value_groupings.any?
+    #       all_value_ids = option_type_value_groupings.values
     
-          # Generate all combinations of value ids
-          all_value_ids =
-            all_value_ids.inject(all_value_ids.shift) do |memo, value|
-              memo.product(value).map(&:flatten)
-            end
+    #       # Generate all combinations of value ids
+    #       all_value_ids =
+    #         all_value_ids.inject(all_value_ids.shift) do |memo, value|
+    #           memo.product(value).map(&:flatten)
+    #         end
     
-          # Create variants for each combination of value ids
-          all_value_ids.each do |value_ids|
-            variants.create(option_value_ids: value_ids, price: master_price)
-          end
-        end
-      end
-    end
+    #       # Create variants for each combination of value ids
+    #       # all_value_ids.each do |value_ids|
+    #       #   variants.build(option_value_ids: value_ids)
+    #       # end
+    #     end
+    #   end
+    # end
     
     before_save :check_option_types
 
