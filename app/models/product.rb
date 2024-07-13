@@ -12,6 +12,8 @@ class Product < ApplicationRecord
     #
     # after_save :generate_variants
     
+    #before_save :compact_options
+
     
     # def generate_variants
     #   option_type_value_groupings = {}
@@ -36,10 +38,10 @@ class Product < ApplicationRecord
     #           memo.product(value).map(&:flatten)
     #         end
     
-    #       # Create variants for each combination of value ids
-    #       # all_value_ids.each do |value_ids|
-    #       #   variants.build(option_value_ids: value_ids)
-    #       # end
+    #       Create variants for each combination of value ids
+    #       all_value_ids.each do |value_ids|
+    #         variants.create(option_value_ids: value_ids)
+    #       end
     #     end
     #   end
     # end

@@ -101,6 +101,9 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_18_085836) do
 
   create_table "variants", force: :cascade do |t|
     t.string "sku"
+    t.string "option1"
+    t.string "option2"
+    t.string "option3"
     t.decimal "price", precision: 10, scale: 2
     t.string "unique_id"
     t.boolean "is_master"

@@ -6,7 +6,7 @@ export default class extends NestedForm {
     super.connect();
     console.log('Controller loaded!');
     this.updateAddButtonVisibility();
-    
+
     const existingSelectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
     this.initializeSlimSelect(existingSelectElements);
 
@@ -15,9 +15,15 @@ export default class extends NestedForm {
     });
 
     this.updateDeleteButtonVisibility();
-    this.updateVariants();
+
+    // Load existing variants if they exist
+    const existingVariantsData = this.element.dataset.existingVariants;
+    if (existingVariantsData) {
+      const existingVariants = JSON.parse(existingVariantsData);
+      this.displayExistingVariants(existingVariants);
+    }
   }
-  
+
   initializeSlimSelect(elements) {
     elements.forEach((element) => {
       new SlimSelect({
@@ -42,7 +48,7 @@ export default class extends NestedForm {
       this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
       const newField = this.targetTarget.lastElementChild;
       const selectElements = newField.querySelectorAll('.product-option-value-select, .product-option-name-select');
-      
+
       this.initializeSlimSelect(selectElements);
       this.addInputEventListeners(newField);
       this.updateAddButtonVisibility();
@@ -67,7 +73,7 @@ export default class extends NestedForm {
 
     const newField = valueContainer.lastElementChild;
     const selectElements = newField.querySelectorAll('.product-option-value-select');
-    
+
     this.initializeSlimSelect(selectElements);
     this.addInputEventListeners(newField);
     this.updateDeleteButtonVisibility();
@@ -101,10 +107,10 @@ export default class extends NestedForm {
         valueField.querySelector('[name*="[_destroy]"]').value = "1";
         valueField.style.display = 'none';
       });
-  
+
       wrapper.querySelector('[name*="[_destroy]"]').value = "1";
       wrapper.style.display = 'none';
-  
+
       this.updateAddButtonVisibility();
       this.updateVariants();
     }
@@ -134,23 +140,35 @@ export default class extends NestedForm {
   }
 
   updateVariants() {
+    const storedValues = this.storeCurrentVariantValues();
+
     const optionTypes = [];
     this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach((wrapper) => {
       const optionType = wrapper.querySelector('.product-option-name-select').value;
-      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select')).map(select => select.value).filter(value => value);
-      
+      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked')).map(option => option.value).filter(value => value);
+
       if (optionType && optionValues.length > 0) {
         optionTypes.push({ type: optionType, values: optionValues });
       }
     });
 
     const variants = this.generateVariants(optionTypes);
-    this.displayVariants(variants);
+    this.displayVariants(variants, storedValues);
+  }
+
+  storeCurrentVariantValues() {
+    const storedValues = {};
+    this.element.querySelectorAll('.variant').forEach((variant, index) => {
+      const sku = variant.querySelector(`input[name="product[variants_attributes][${index}][sku]"]`).value;
+      const price = variant.querySelector(`input[name="product[variants_attributes][${index}][price]"]`).value;
+      storedValues[index] = { sku, price };
+    });
+    return storedValues;
   }
 
   generateVariants(optionTypes) {
     if (optionTypes.length === 0) return [];
-    
+
     const generateCombinations = (arrays, prefix = []) => {
       if (arrays.length === 0) return [prefix];
 
@@ -167,21 +185,54 @@ export default class extends NestedForm {
     return generateCombinations(arrays);
   }
 
-  displayVariants(variants) {
+  displayVariants(variants, storedValues = {}) {
     const container = this.element.querySelector('#variants-container');
     container.innerHTML = '';
 
+    const table = document.createElement('table');
+    table.className = 'table table-bordered';
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Options</th>
+        <th>SKU</th>
+        <th>Price</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
     variants.forEach((variant, index) => {
-      const variantElement = document.createElement('div');
-      variantElement.className = 'variant';
-      const optionValueIds = variant.map(v => `<input type="hidden" name="product[variants_attributes][${index}][option_value_ids][]" value="${v}">`).join('');
-      variantElement.innerHTML = `
-        <div>${variant.join(' / ')}</div>
-        ${optionValueIds}
-        <label>SKU: <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control"></label>
-        <label>Price: <input type="text" name="product[variants_attributes][${index}][price]" class="form-control"></label>
+      const [option1, option2, option3] = variant;
+      const storedValue = storedValues[index] || { sku: '', price: '' };
+
+      const row = document.createElement('tr');
+      row.className = 'variant';
+      row.innerHTML = `
+        <td>${variant.join(' / ')}</td>
+        <td>
+          <input type="hidden" name="product[variants_attributes][${index}][option1]" value="${option1 || ''}">
+          <input type="hidden" name="product[variants_attributes][${index}][option2]" value="${option2 || ''}">
+          <input type="hidden" name="product[variants_attributes][${index}][option3]" value="${option3 || ''}">
+          <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control" value="${storedValue.sku}">
+        </td>
+        <td>
+          <input type="text" name="product[variants_attributes][${index}][price]" class="form-control" value="${storedValue.price}">
+        </td>
       `;
-      container.appendChild(variantElement);
+      tbody.appendChild(row);
     });
+
+    table.appendChild(tbody);
+    container.appendChild(table);
+  }
+
+  displayExistingVariants(existingVariants) {
+    const storedValues = {};
+    existingVariants.forEach((variant, index) => {
+      storedValues[index] = { sku: variant.sku, price: variant.price };
+    });
+    this.displayVariants(existingVariants.map(v => [v.option1, v.option2, v.option3]), storedValues);
   }
 }

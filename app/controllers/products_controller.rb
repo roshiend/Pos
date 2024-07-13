@@ -30,7 +30,7 @@ class ProductsController < ApplicationController
     logger.debug "Product params: #{product_params.inspect}"
     @product = Product.new(product_params)
     if @product.save
-      create_option_value_variants(@product)
+      
       redirect_to @product, notice: 'Product was successfully created.'
     else
       logger.debug "Product errors: #{@product.errors.full_messages}"
@@ -110,17 +110,10 @@ class ProductsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id, :sku, :price,:unique_id,option_value_ids: []],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id,:name, :_destroy]])
+      params.require(:product).permit(:name,:description,:master_price,variants_attributes: [:id,:option1, :option2, :option3, :sku, :price,:unique_id],option_types_attributes:[:id,:name,:_destroy,option_values_attributes: [:id,name:[], :_destroy]])
     end
 
-    def create_option_value_variants(product)
-      product.variants.each do |variant|
-        option_value_ids = params[:product][:variants_attributes][variant.id.to_s][:option_value_ids]
-        option_value_ids.each do |option_value_id|
-          OptionValueVariant.create(variant: variant, option_value_id: option_value_id)
-        end if option_value_ids
-      end
-    end
+    
 
 
     
