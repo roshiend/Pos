@@ -86,7 +86,7 @@ export default class extends NestedForm {
       valueField.querySelector('[name*="[_destroy]"]').value = "1";
       valueField.style.display = 'none';
       this.updateDeleteButtonVisibility();
-      this.updateVariants();
+     // this.updateVariants();
     }
   }
 
@@ -229,10 +229,12 @@ export default class extends NestedForm {
   }
 
   displayExistingVariants(existingVariants) {
+    console.log("Existing Variants:", existingVariants);  // Add this line
     const storedValues = {};
     existingVariants.forEach((variant, index) => {
-      storedValues[index] = { sku: variant.sku, price: variant.price };
+        storedValues[index] = { sku: variant.sku, price: variant.price };
     });
     this.displayVariants(existingVariants.map(v => [v.option1, v.option2, v.option3]), storedValues);
-  }
+}
+
 }
