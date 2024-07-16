@@ -86,7 +86,7 @@ export default class extends NestedForm {
       valueField.querySelector('[name*="[_destroy]"]').value = "1";
       valueField.style.display = 'none';
       this.updateDeleteButtonVisibility();
-     // this.updateVariants();
+      this.updateVariants();
     }
   }
 
@@ -166,25 +166,78 @@ export default class extends NestedForm {
     return storedValues;
   }
 
+  // generateVariants(optionTypes) {
+  //   if (optionTypes.length === 0) return [];
+
+  //   const generateCombinations = (arrays, prefix = []) => {
+  //     if (arrays.length === 0) return [prefix];
+
+  //     const [first, ...rest] = arrays;
+  //     const result = [];
+  //     first.forEach(value => {
+  //       result.push(...generateCombinations(rest, [...prefix, value]));
+  //     });
+
+  //     return result;
+  //   };
+
+  //   const arrays = optionTypes.map(optionType => optionType.values);
+  //   console.log(generateCombinations(arrays));
+  //   return generateCombinations(arrays);
+    
+  // }
+  // generateVariants(optionTypes) {
+  //   if (optionTypes.length === 0) return [];
+  
+  //   const generateCombinations = (arrays, prefix = []) => {
+  //     if (arrays.length === 0) return [prefix];
+  
+  //     const [first, ...rest] = arrays;
+  //     const result = [];
+      
+  //     // First iterate through the rest arrays to create combinations
+  //     const restCombinations = generateCombinations(rest, prefix);
+      
+  //     // Then append each element of the first array to the combinations
+  //     restCombinations.forEach(combination => {
+  //       first.forEach(value => {
+  //         result.push([...combination, value]);
+  //       });
+  //     });
+  
+  //     return result;
+  //   };
+  
+  //   const arrays = optionTypes.map(optionType => optionType.values);
+  //   return generateCombinations(arrays);
+  // }
+  
   generateVariants(optionTypes) {
     if (optionTypes.length === 0) return [];
-
-    const generateCombinations = (arrays, prefix = []) => {
-      if (arrays.length === 0) return [prefix];
-
+  
+    const customCartesianProduct = (arrays) => {
+      if (arrays.length === 0) return [];
+  
       const [first, ...rest] = arrays;
+      const restProduct = customCartesianProduct(rest);
+  
+      if (restProduct.length === 0) {
+        return first.map(value => [value]);
+      }
+  
       const result = [];
-      first.forEach(value => {
-        result.push(...generateCombinations(rest, [...prefix, value]));
-      });
-
+      for (let i = 0; i < restProduct.length; i++) {
+        for (let j = 0; j < first.length; j++) {
+          result.push([first[j], ...restProduct[i]]);
+        }
+      }
+  
       return result;
     };
-
+  
     const arrays = optionTypes.map(optionType => optionType.values);
-    return generateCombinations(arrays);
+    return customCartesianProduct(arrays);
   }
-
   displayVariants(variants, storedValues = {}) {
     const container = this.element.querySelector('#variants-container');
     container.innerHTML = '';

@@ -60,6 +60,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_18_085836) do
 
   create_table "option_types", force: :cascade do |t|
     t.string "name"
+    t.integer "position"
     t.bigint "product_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -86,6 +87,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_18_085836) do
   create_table "option_values", force: :cascade do |t|
     t.string "name", default: [], null: false, array: true
     t.bigint "option_type_id", null: false
+    t.integer "position"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["option_type_id"], name: "index_option_values_on_option_type_id"
@@ -106,6 +108,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_18_085836) do
     t.string "option3"
     t.decimal "price", precision: 10, scale: 2
     t.string "unique_id"
+    t.integer "position"
     t.boolean "is_master"
     t.bigint "product_id", null: false
     t.datetime "created_at", null: false
