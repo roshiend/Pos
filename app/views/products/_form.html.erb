@@ -41,8 +41,9 @@
 
   <div>
     <%= form.label :vendor, style: "display: block" %>
-    <%= form.select :name, options_for_select(Vendor.all.map { |vendor| [vendor.name, vendor.code] }, selected: form.object.name), { prompt: 'Select option name' }, class: 'vendor-select form-control', id: "vendor-select" %>
+    <%= form.select :name, options_for_select(Vendor.all.map { |vendor| [vendor.name, vendor.code] }, selected: form.object.name), { prompt: 'Select vendor' }, class: 'vendor-select form-control', id: "vendor-select" %>
   </div>
+  
   <br>
 
   <%= form.fields_for :option_types do |p_options| %>
@@ -59,3 +60,4 @@
     <%= form.submit %>
   </div>
 <% end %>
+
