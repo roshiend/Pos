@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :vendors
   resources :option_value_variants
   resources :variants
   resources :option_value_sets
@@ -10,7 +11,11 @@ Rails.application.routes.draw do
   end 
 
   resources :variants 
-  
+  resources :vendors, only: [] do
+    member do
+      get :code
+    end
+  end
 
   
   

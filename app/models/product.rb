@@ -1,5 +1,6 @@
 
 class Product < ApplicationRecord
+    belongs_to :vendor
     has_many :option_types, dependent: :destroy
     has_many :variants, dependent: :destroy
     has_many :option_values, through: :option_types

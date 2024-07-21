@@ -241,7 +241,13 @@ export default class extends NestedForm {
   displayVariants(variants, storedValues = {}) {
     const container = this.element.querySelector('#variants-container');
     container.innerHTML = '';
-
+  
+    const vendorCode = document.querySelector('#vendor-select').value;
+    if (!vendorCode) {
+      console.error('Vendor code is not selected.');
+      return;
+    }
+  
     const table = document.createElement('table');
     table.className = 'table table-bordered';
     const thead = document.createElement('thead');
@@ -250,16 +256,18 @@ export default class extends NestedForm {
         <th>Options</th>
         <th>SKU</th>
         <th>Price</th>
-      </tr>
-    `;
+      </tr>`;
     table.appendChild(thead);
-
+  
     const tbody = document.createElement('tbody');
-
+  
     variants.forEach((variant, index) => {
       const [option1, option2, option3] = variant;
       const storedValue = storedValues[index] || { sku: '', price: '' };
-
+  
+      // Generate SKU based on vendor code and option values
+      const sku = `${vendorCode}-${option1 || ''}-${option2 || ''}-${option3 || ''}`.toUpperCase();
+  
       const row = document.createElement('tr');
       row.className = 'variant';
       row.innerHTML = `
@@ -268,19 +276,18 @@ export default class extends NestedForm {
           <input type="hidden" name="product[variants_attributes][${index}][option1]" value="${option1 || ''}">
           <input type="hidden" name="product[variants_attributes][${index}][option2]" value="${option2 || ''}">
           <input type="hidden" name="product[variants_attributes][${index}][option3]" value="${option3 || ''}">
-          <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control" value="${storedValue.sku}">
+          <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control" value="${sku}">
         </td>
         <td>
           <input type="text" name="product[variants_attributes][${index}][price]" class="form-control" value="${storedValue.price}">
-        </td>
-      `;
+        </td>`;
       tbody.appendChild(row);
     });
-
+  
     table.appendChild(tbody);
     container.appendChild(table);
   }
-
+  
   displayExistingVariants(existingVariants) {
     console.log("Existing Variants:", existingVariants);  // Add this line
     const storedValues = {};

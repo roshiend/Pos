@@ -58,3 +58,8 @@ gender_option = OptionTypeSet.find_or_create_by(name: 'Gender')
 gender_option.option_value_sets.find_or_create_by(value: 'Male')
 gender_option.option_value_sets.find_or_create_by(value: 'Female')
 gender_option.option_value_sets.find_or_create_by(value: 'Unisex')
+
+#vendors
+vendor_name = Vendor.find_or_create_by(name: 'Jhonson', code: "JH001")
+vendor_name = Vendor.find_or_create_by(name: 'Imran', code: "IM001")
+vendor_name = Vendor.find_or_create_by(name: 'Suresh', code: "SU001")
