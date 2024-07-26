@@ -524,3 +524,38 @@ belongs_to :product
 attributes - option1,option2,option3,sku,weight
 
 based on selected option_type, option_value  variants should generate 
+
+class Variant < ApplicationRecord
+  belongs_to :product,optional: true
+  has_many :option_value_variants, dependent: :destroy
+  has_many :option_values, through: :option_value_variants
+  validate :uniqueness_of_option_values
+
+  accepts_nested_attributes_for :option_value_variants, allow_destroy: true
+end
+
+class OptionValue < ApplicationRecord
+    belongs_to :option_type
+    has_many :option_value_variants, dependent: :destroy
+    has_many :variants, through: :option_value_variants
+    has_many :products, through: :option_types
+
+    validates_presence_of :name
+    validates_uniqueness_of :name, scope: :option_type_id, case_sensitive: true
+
+end
+
+class OptionValueVariant < ApplicationRecord
+    belongs_to :option_value
+    belongs_to :variant
+  
+    validates_presence_of :option_value
+    validates_presence_of :variant
+    validates_uniqueness_of :option_value_id, scope: :variant_id
+
+end
+
+20240414183009 - product migration
+vendor 20240719175731
+product_type  20240721130602
+

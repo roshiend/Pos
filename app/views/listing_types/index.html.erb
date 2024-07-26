@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Listing types</h1>
+
+<div id="listing_types">
+  <% @listing_types.each do |listing_type| %>
+    <%= render listing_type %>
+    <p>
+      <%= link_to "Show this listing type", listing_type %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New listing type", new_listing_type_path %>

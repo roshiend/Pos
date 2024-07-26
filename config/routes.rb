@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+  resources :listing_types
+  resources :shop_locations
+  resources :sub_catogories
+  
+  resources :product_types
   resources :vendors
   resources :option_value_variants
   resources :variants
@@ -15,6 +20,9 @@ Rails.application.routes.draw do
     member do
       get :code
     end
+  end
+  resources :categories do
+    get :sub_categories, on: :member
   end
 
   

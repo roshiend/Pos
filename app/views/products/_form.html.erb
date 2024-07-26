@@ -1,3 +1,17 @@
+<%# app/views/products/_form.html.erb %>
+
+<%# Add the script tag to pass Vendor and ShopLocation data to the frontend %>
+
+<script>
+  window.LastIds = {
+    lastProductId: "<%= @last_product_id %>",
+    lastVariantId: "<%= @last_variant_id %>"
+  };
+  window.Vendor = JSON.parse('<%= raw Vendor.all.to_json(only: [:id, :code]) %>');
+  window.ShopLocation = JSON.parse('<%= raw ShopLocation.all.to_json(only: [:id, :code]) %>');
+  window.ListingType = JSON.parse('<%= raw ListingType.all.to_json(only: [:id, :code]) %>');
+</script>
+
 <%= form_with(model: @product, local: true, data: { controller: 'product-options', existing_variants: @product.variants.to_json(only: [:id, :sku, :price, :option1, :option2, :option3]) }) do |form| %>
 
   <% if product.errors.any? %>
@@ -25,12 +39,37 @@
 
   <div>
     <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name %>
+    <%= form.text_field :name, placeholder: "Short sleeve t-shirt" %>
   </div>
 
   <div>
     <%= form.label :description, style: "display: block" %>
     <%= form.rich_text_area :description %>
+  </div>
+  
+  <div>
+    <%= form.label :Product_type, style: "display: block" %>
+    <%= form.select :product_type_id, options_for_select(ProductType.all.map { |p_type| [p_type.name, p_type.id] }, selected: form.object.product_type_id), { prompt: 'Select Product Type' }, class: 'product_type-select form-control', id: "product_type-select" %>
+  </div>
+
+  <div>
+    <%= form.label :category, style: "display: block" %>
+    <%= form.select :category_id, options_for_select(Category.all.map { |category| [category.value, category.id] }, selected: form.object.category_id), { prompt: 'Select Category' }, class: 'category-select form-control', id: "category-select", data: { action: 'change->product-options#updateSubCategories' } %>
+  </div>
+
+  <div>
+    <%= form.label :sub_category, style: "display: block" %>
+    <%= form.select :sub_category_id, [], { prompt: 'Select Sub-Category' }, class: 'sub_category-select form-control', id: "sub-category-select" %>
+  </div>
+
+  <div>
+    <%= form.label :shop_location, style: "display: block" %>
+    <%= form.select :shop_location_id, options_for_select(ShopLocation.all.map { |shop_location| [shop_location.name, shop_location.id] }, selected: form.object.shop_location_id), { prompt: 'Select Shop Location' }, class: 'shop-location-select form-control', id: "shop-location-select" %>
+  </div>
+  
+  <div>
+    <%= form.label :listing_type, style: "display: block" %>
+    <%= form.select :listing_type_id, options_for_select(ListingType.all.map { |listing_type| [listing_type.name, listing_type.id] }, selected: form.object.listing_type_id), { prompt: 'Select Listing Type' }, class: 'listing-type-select form-control', id: "listing-type-select" %>
   </div>
 
   <div>
@@ -41,7 +80,7 @@
 
   <div>
     <%= form.label :vendor, style: "display: block" %>
-    <%= form.select :name, options_for_select(Vendor.all.map { |vendor| [vendor.name, vendor.code] }, selected: form.object.name), { prompt: 'Select vendor' }, class: 'vendor-select form-control', id: "vendor-select" %>
+    <%= form.select :vendor_id, options_for_select(Vendor.all.map { |vendor| [vendor.name, vendor.id] }, selected: form.object.vendor_id), { prompt: 'Select vendor' }, class: 'vendor-select form-control', id: "vendor-select" %>
   </div>
   
   <br>
@@ -60,4 +99,3 @@
     <%= form.submit %>
   </div>
 <% end %>
-

@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @listing_type %>
+
+<div>
+  <%= link_to "Edit this listing type", edit_listing_type_path(@listing_type) %> |
+  <%= link_to "Back to listing types", listing_types_path %>
+
+  <%= button_to "Destroy this listing type", @listing_type, method: :delete %>
+</div>

@@ -10,6 +10,7 @@ class CreateVariants < ActiveRecord::Migration[7.0]
       t.integer :position 
       t.boolean :is_master
       t.references :product, null: false, foreign_key: true
+      t.references :shop_location, null: false, foreign_key: true
       t.timestamps
     end
   end

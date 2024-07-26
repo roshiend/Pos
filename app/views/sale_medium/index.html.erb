@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Sale media</h1>
+
+<div id="sale_media">
+  <% @sale_media.each do |sale_medium| %>
+    <%= render sale_medium %>
+    <p>
+      <%= link_to "Show this sale medium", sale_medium %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New sale medium", new_sale_medium_path %>

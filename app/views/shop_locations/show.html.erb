@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @shop_location %>
+
+<div>
+  <%= link_to "Edit this shop location", edit_shop_location_path(@shop_location) %> |
+  <%= link_to "Back to shop locations", shop_locations_path %>
+
+  <%= button_to "Destroy this shop location", @shop_location, method: :delete %>
+</div>

@@ -1,5 +1,6 @@
 class Variant < ApplicationRecord
-  belongs_to :product, optional: true
+  belongs_to :product, optional: false
+  belongs_to :shop_location
   has_many :option_value_variants, dependent: :destroy
   has_many :option_values, through: :option_value_variants
 

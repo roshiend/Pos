@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @sub_catogory %>
+
+<div>
+  <%= link_to "Edit this sub catogory", edit_sub_catogory_path(@sub_catogory) %> |
+  <%= link_to "Back to sub catogories", sub_catogories_path %>
+
+  <%= button_to "Destroy this sub catogory", @sub_catogory, method: :delete %>
+</div>
