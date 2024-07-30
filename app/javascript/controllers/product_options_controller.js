@@ -8,6 +8,9 @@ export default class extends NestedForm {
     console.log('Controller loaded!');
     this.updateAddButtonVisibility();
 
+    // Fetch the last used product ID from the server and store it
+    this.lastProductId = window.LastIds.lastProductId;
+
     const existingSelectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
     this.initializeSlimSelect(existingSelectElements);
 
@@ -249,10 +252,11 @@ export default class extends NestedForm {
     const vendor = window.Vendor.find(v => v.id === parseInt(vendorId));
     const shopLocation = window.ShopLocation.find(sl => sl.id === parseInt(shopLocationId));
     const subCategoryCode = subCategoryOption ? subCategoryOption.getAttribute('data-code') : '';
+    const subCategoryText = subCategoryOption ? subCategoryOption.textContent : '';
     const listingType = window.ListingType.find(lt => lt.id === parseInt(listingTypeId));
 
-    if (!vendor || !shopLocation || !subCategoryCode || !listingType) {
-      console.error('Vendor, shop location, sub-category, or listing type is not selected or missing code.');
+    if (!vendor || !shopLocation || !listingType) {
+      console.error('Vendor, shop location, or listing type is not selected.');
       return;
     }
 
@@ -278,13 +282,19 @@ export default class extends NestedForm {
       const [option1, option2, option3] = variant;
       const storedValue = storedValues[index] || { sku: '', price: '' };
   
-      // Generate SKU based on vendor code, listing type code, and option values
+      // Generate SKU based on vendor code and option values
       const sku = this.generateSku(vendorCode, option1, option2, option3, index + 1); // index + 1 to start sequence from 1
-      // Generate the barcode
-      const sequenceCode = String(index + 1).padStart(7, '0'); // pad with leading zeros to make it 7 characters
-      const barcode = this.generateBarcode(vendorCode, shopLocationCode, sequenceCode, listingTypeCode);
+
+      // Generate the next product ID
+      const nextProductId = String(this.lastProductId + 1).padStart(7, '0'); // pad with leading zeros to make it 7 characters
+      // Generate the sequence code
+      const sequenceCode = String(index + 1).padStart(3, '0'); // pad with leading zeros to make it 3 characters
+
+      // Generate Barcode based on vendor code, shop location code, product ID, sequence code, and listing type code
+      const barcode = this.generateBarcode(shopLocationCode, nextProductId, sequenceCode, listingTypeCode);
       // Generate extra text for above the barcode
-      const extraText = `Vendor: ${vendorCode} - ${variant.join(' / ')}`;
+      const extraText = `${vendorCode}-${variant.join(' / ')}`;
+      const subCategoryExtraText = subCategoryId ? subCategoryText : ''; // Ensure empty string if no sub-category is selected
   
       const row = document.createElement('tr');
       row.className = 'variant';
@@ -301,7 +311,8 @@ export default class extends NestedForm {
           <input type="text" name="product[variants_attributes][${index}][price]" class="form-control" value="${storedValue.price}">
         </td>
         <td>
-          <div>${extraText}</div>
+          <div  style="text-align: left;font-size: xx-small;margin-bottom: -12px;margin-left: 10px;">${extraText}</div>
+          <div style="text-align: right;font-size: xx-small; margin-right: 10px;">${subCategoryExtraText}</div>
           <svg id="barcode-${index}"></svg>
         </td>`;
       tbody.appendChild(row);
@@ -335,9 +346,9 @@ export default class extends NestedForm {
     return `${baseCode}${option1Code}${option2Code}${option3Code}${sequenceCode}`.toUpperCase();
   }
 
-  generateBarcode(vendorCode, shopLocationCode, sequenceCode, listingTypeCode) {
+  generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode) {
     // Customize this function as per your Barcode generation logic
-    return `${vendorCode}-${shopLocationCode}-${sequenceCode}-${listingTypeCode}`.toUpperCase();
+    return `${shopLocationCode}${productId}${sequenceCode}${listingTypeCode}`.toUpperCase();
   }
 
   addSkuEventListeners() {

@@ -156,7 +156,9 @@ ActiveRecord::Schema[7.0].define(version: 2024_07_24_195433) do
     t.string "option2"
     t.string "option3"
     t.decimal "price", precision: 10, scale: 2
+    t.string "title"
     t.string "unique_id"
+    t.string "barcode"
     t.integer "position"
     t.boolean "is_master"
     t.bigint "product_id", null: false

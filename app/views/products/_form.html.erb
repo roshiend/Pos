@@ -12,7 +12,8 @@
   window.ListingType = JSON.parse('<%= raw ListingType.all.to_json(only: [:id, :code]) %>');
 </script>
 
-<%= form_with(model: @product, local: true, data: { controller: 'product-options', existing_variants: @product.variants.to_json(only: [:id, :sku, :price, :option1, :option2, :option3]) }) do |form| %>
+<%= form_with(model: @product, local: true, data: { controller: 'product-options', existing_variants: @product.variants.to_json(only: [:id, :sku, :price, :option1, :option2, :option3]), product_id: @product.id }) do |form| %>
+
 
   <% if product.errors.any? %>
     <div style="color: red">
