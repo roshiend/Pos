@@ -3,15 +3,16 @@ class Product < ApplicationRecord
     belongs_to :vendor
     belongs_to :product_type
     belongs_to :shop_location
-    belongs_to :category
+    belongs_to :category,optional: true
     belongs_to :listing_type
 
     has_many :option_types, dependent: :destroy
     has_many :variants, dependent: :destroy
     has_many :option_values, through: :option_types
-    has_many :categories, through: :product_type
+    has_many :sub_categories, through: :category
+    
     has_rich_text :description
-    validates :name, presence: true
+    validates :name,:vendor,:shop_location,:listing_type, presence: true
     validates :description, presence: true
 
     accepts_nested_attributes_for :option_types, allow_destroy: true
@@ -19,12 +20,12 @@ class Product < ApplicationRecord
   
     before_save :check_option_types
 
-    before_save :compact_option
-    def compact_option
-      [option1, option2, option3].compact
-    end
+    # before_save :compact_option
+    # def compact_option
+    #   [option1, option2, option3].compact
+    # end
 
-
+  
   private
 
   def check_option_types

@@ -119,6 +119,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_07_24_195433) do
   create_table "products", force: :cascade do |t|
     t.string "name"
     t.string "description"
+    t.integer "sub_category_id"
     t.decimal "master_price", precision: 10, scale: 2
     t.bigint "vendor_id", null: false
     t.bigint "product_type_id", null: false
@@ -160,13 +161,10 @@ ActiveRecord::Schema[7.0].define(version: 2024_07_24_195433) do
     t.string "unique_id"
     t.string "barcode"
     t.integer "position"
-    t.boolean "is_master"
     t.bigint "product_id", null: false
-    t.bigint "shop_location_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["product_id"], name: "index_variants_on_product_id"
-    t.index ["shop_location_id"], name: "index_variants_on_shop_location_id"
   end
 
   create_table "vendors", force: :cascade do |t|
@@ -191,5 +189,4 @@ ActiveRecord::Schema[7.0].define(version: 2024_07_24_195433) do
   add_foreign_key "products", "vendors"
   add_foreign_key "sub_categories", "categories"
   add_foreign_key "variants", "products"
-  add_foreign_key "variants", "shop_locations"
 end

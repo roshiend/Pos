@@ -32,11 +32,7 @@
     <% end %>
   </template>
 
-  <template data-product-options-target="ttemplate">
-    <%= form.fields_for :variants, Variant.new, child_index: 'NEW_RECORD' do |v| %>
-      <%= render "variants", f: v %>
-    <% end %>
-  </template>
+  
 
   <div>
     <%= form.label :name, style: "display: block" %>
@@ -53,6 +49,8 @@
     <%= form.select :product_type_id, options_for_select(ProductType.all.map { |p_type| [p_type.name, p_type.id] }, selected: form.object.product_type_id), { prompt: 'Select Product Type' }, class: 'product_type-select form-control', id: "product_type-select" %>
   </div>
 
+ 
+
   <div>
     <%= form.label :category, style: "display: block" %>
     <%= form.select :category_id, options_for_select(Category.all.map { |category| [category.value, category.id] }, selected: form.object.category_id), { prompt: 'Select Category' }, class: 'category-select form-control', id: "category-select", data: { action: 'change->product-options#updateSubCategories' } %>
@@ -60,7 +58,7 @@
 
   <div>
     <%= form.label :sub_category, style: "display: block" %>
-    <%= form.select :sub_category_id, [], { prompt: 'Select Sub-Category' }, class: 'sub_category-select form-control', id: "sub-category-select" %>
+    <%= form.select :sub_category_id, options_for_select([], selected: form.object.sub_category_id), { prompt: 'Select Sub-Category' }, class: 'sub_category-select form-control', id: "sub-category-select" %>
   </div>
 
   <div>

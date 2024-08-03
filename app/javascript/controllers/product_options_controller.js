@@ -1,15 +1,11 @@
 import NestedForm from 'stimulus-rails-nested-form';
 import SlimSelect from 'slim-select';
-import JsBarcode from 'jsbarcode';
 
 export default class extends NestedForm {
   connect() {
     super.connect();
     console.log('Controller loaded!');
     this.updateAddButtonVisibility();
-
-    // Fetch the last used product ID from the server and store it
-    this.lastProductId = window.LastIds.lastProductId;
 
     const existingSelectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
     this.initializeSlimSelect(existingSelectElements);
@@ -19,24 +15,6 @@ export default class extends NestedForm {
     });
 
     this.updateDeleteButtonVisibility();
-
-    // Add event listener for vendor, shop location, sub-category, and listing type changes
-    const vendorSelect = document.querySelector('#vendor-select');
-    const shopLocationSelect = document.querySelector('#shop-location-select');
-    const subCategorySelect = document.querySelector('#sub-category-select');
-    const listingTypeSelect = document.querySelector('#listing-type-select');
-    if (vendorSelect) {
-      vendorSelect.addEventListener('change', this.updateVariants.bind(this));
-    }
-    if (shopLocationSelect) {
-      shopLocationSelect.addEventListener('change', this.updateVariants.bind(this));
-    }
-    if (subCategorySelect) {
-      subCategorySelect.addEventListener('change', this.updateVariants.bind(this));
-    }
-    if (listingTypeSelect) {
-      listingTypeSelect.addEventListener('change', this.updateVariants.bind(this));
-    }
 
     // Load existing variants if they exist
     const existingVariantsData = this.element.dataset.existingVariants;
@@ -148,7 +126,9 @@ export default class extends NestedForm {
     const nameInput = field.querySelector('.product-option-name-select');
     const valuesInput = field.querySelector('.product-option-value-select');
 
-    const handleInputChange = () => {
+    const handleInputChange = (event) => {
+      const select = event.target;
+      this.storeSelectionOrder(select);
       this.updateVariants();
     };
 
@@ -161,108 +141,56 @@ export default class extends NestedForm {
     }
   }
 
-  updateSubCategories(event) {
-    const categoryId = event.target.value;
-    const subCategorySelect = document.querySelector('#sub-category-select');
-    
-    if (categoryId) {
-      // Fetch sub-categories based on the selected category
-      fetch(`/categories/${categoryId}/sub_categories`)
-        .then(response => response.json())
-        .then(subCategories => {
-          // Clear existing options
-          subCategorySelect.innerHTML = '';
-          // Add a prompt option
-          subCategorySelect.insertAdjacentHTML('beforeend', '<option value="">Select Sub-Category</option>');
-          // Add new sub-category options
-          subCategories.forEach(subCategory => {
-            subCategorySelect.insertAdjacentHTML('beforeend', `<option value="${subCategory.id}" data-code="${subCategory.code}">${subCategory.value}</option>`);
-          });
-        });
-    } else {
-      subCategorySelect.innerHTML = '<option value="">Select Sub-Category</option>';
-    }
+  storeSelectionOrder(select) {
+    const selectedOptions = Array.from(select.selectedOptions).map(option => option.value);
+    // Store the order of selected options based on the sequence of selection
+    const order = select.dataset.selectedOrder ? JSON.parse(select.dataset.selectedOrder) : [];
+    selectedOptions.forEach((value) => {
+      if (!order.includes(value)) {
+        order.push(value);
+      }
+    });
+    select.dataset.selectedOrder = JSON.stringify(order);
   }
 
   updateVariants() {
-    const storedValues = this.storeCurrentVariantValues();
-
     const optionTypes = [];
     this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach((wrapper) => {
       const optionType = wrapper.querySelector('.product-option-name-select').value;
-      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked')).map(option => option.value).filter(value => value);
+      const select = wrapper.querySelector('.product-option-value-select');
+      const selectedOrder = JSON.parse(select.dataset.selectedOrder || "[]");
 
-      if (optionType && optionValues.length > 0) {
-        optionTypes.push({ type: optionType, values: optionValues });
+      if (optionType && selectedOrder.length > 0) {
+        optionTypes.push({ type: optionType, values: selectedOrder });
       }
     });
 
     const variants = this.generateVariants(optionTypes);
-    this.displayVariants(variants, storedValues);
-  }
-
-  storeCurrentVariantValues() {
-    const storedValues = {};
-    this.element.querySelectorAll('.variant').forEach((variant, index) => {
-      const sku = variant.querySelector(`input[name="product[variants_attributes][${index}][sku]"]`).value;
-      const price = variant.querySelector(`input[name="product[variants_attributes][${index}][price]"]`).value;
-      storedValues[index] = { sku, price };
-    });
-    return storedValues;
+    this.displayVariants(variants);
   }
 
   generateVariants(optionTypes) {
     if (optionTypes.length === 0) return [];
-  
-    const customCartesianProduct = (arrays) => {
-      if (arrays.length === 0) return [];
-  
+
+    const generateCombinations = (arrays, prefix = []) => {
+      if (arrays.length === 0) return [prefix];
+
       const [first, ...rest] = arrays;
-      const restProduct = customCartesianProduct(rest);
-  
-      if (restProduct.length === 0) {
-        return first.map(value => [value]);
-      }
-  
       const result = [];
-      for (let i = 0; i < restProduct.length; i++) {
-        for (let j = 0; j < first.length; j++) {
-          result.push([first[j], ...restProduct[i]]);
-        }
-      }
-  
+      first.forEach(value => {
+        result.push(...generateCombinations(rest, [...prefix, value]));
+      });
+
       return result;
     };
-  
+
     const arrays = optionTypes.map(optionType => optionType.values);
-    return customCartesianProduct(arrays);
+    return generateCombinations(arrays);
   }
 
-  displayVariants(variants, storedValues = {}) {
+  displayVariants(variants) {
     const container = this.element.querySelector('#variants-container');
     container.innerHTML = '';
-  
-    const vendorId = document.querySelector('#vendor-select').value;
-    const shopLocationId = document.querySelector('#shop-location-select').value;
-    const subCategorySelect = document.querySelector('#sub-category-select');
-    const subCategoryId = subCategorySelect.value;
-    const subCategoryOption = subCategorySelect.querySelector(`option[value="${subCategoryId}"]`);
-    const listingTypeId = document.querySelector('#listing-type-select').value;
-
-    const vendor = window.Vendor.find(v => v.id === parseInt(vendorId));
-    const shopLocation = window.ShopLocation.find(sl => sl.id === parseInt(shopLocationId));
-    const subCategoryCode = subCategoryOption ? subCategoryOption.getAttribute('data-code') : '';
-    const subCategoryText = subCategoryOption ? subCategoryOption.textContent : '';
-    const listingType = window.ListingType.find(lt => lt.id === parseInt(listingTypeId));
-
-    if (!vendor || !shopLocation || !listingType) {
-      console.error('Vendor, shop location, or listing type is not selected.');
-      return;
-    }
-
-    const vendorCode = vendor.code;
-    const shopLocationCode = shopLocation.code;
-    const listingTypeCode = listingType.code;
 
     const table = document.createElement('table');
     table.className = 'table table-bordered';
@@ -272,30 +200,15 @@ export default class extends NestedForm {
         <th>Options</th>
         <th>SKU</th>
         <th>Price</th>
-        <th>Barcode</th>
-      </tr>`;
+      </tr>
+    `;
     table.appendChild(thead);
-  
+
     const tbody = document.createElement('tbody');
-  
+
     variants.forEach((variant, index) => {
       const [option1, option2, option3] = variant;
-      const storedValue = storedValues[index] || { sku: '', price: '' };
-  
-      // Generate SKU based on vendor code and option values
-      const sku = this.generateSku(vendorCode, option1, option2, option3, index + 1); // index + 1 to start sequence from 1
 
-      // Generate the next product ID
-      const nextProductId = String(this.lastProductId + 1).padStart(7, '0'); // pad with leading zeros to make it 7 characters
-      // Generate the sequence code
-      const sequenceCode = String(index + 1).padStart(3, '0'); // pad with leading zeros to make it 3 characters
-
-      // Generate Barcode based on vendor code, shop location code, product ID, sequence code, and listing type code
-      const barcode = this.generateBarcode(shopLocationCode, nextProductId, sequenceCode, listingTypeCode);
-      // Generate extra text for above the barcode
-      const extraText = `${vendorCode}-${variant.join(' / ')}`;
-      const subCategoryExtraText = subCategoryId ? subCategoryText : ''; // Ensure empty string if no sub-category is selected
-  
       const row = document.createElement('tr');
       row.className = 'variant';
       row.innerHTML = `
@@ -304,75 +217,21 @@ export default class extends NestedForm {
           <input type="hidden" name="product[variants_attributes][${index}][option1]" value="${option1 || ''}">
           <input type="hidden" name="product[variants_attributes][${index}][option2]" value="${option2 || ''}">
           <input type="hidden" name="product[variants_attributes][${index}][option3]" value="${option3 || ''}">
-          <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control sku-input" value="${sku}">
-        </td>
-        
-        <td>
-          <input type="text" name="product[variants_attributes][${index}][price]" class="form-control" value="${storedValue.price}">
+          <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control" value="">
         </td>
         <td>
-          <div  style="text-align: left;font-size: xx-small;margin-bottom: -12px;margin-left: 10px;">${extraText}</div>
-          <div style="text-align: right;font-size: xx-small; margin-right: 10px;">${subCategoryExtraText}</div>
-          <svg id="barcode-${index}"></svg>
-        </td>`;
+          <input type="text" name="product[variants_attributes][${index}][price]" class="form-control" value="">
+        </td>
+      `;
       tbody.appendChild(row);
-
-      // Generate and display the barcode
-      requestAnimationFrame(() => {
-        JsBarcode(`#barcode-${index}`, barcode, {
-          format: "CODE128",
-          lineColor: "black",
-          width: 2,
-          height: 40,
-          displayValue: true
-        });
-      });
     });
-  
+
     table.appendChild(tbody);
     container.appendChild(table);
-
-    // Add event listeners to SKU input fields for barcode regeneration
-    this.addSkuEventListeners();
   }
 
-  generateSku(vendorCode, option1, option2, option3, sequence) {
-    // Customize this function as per your SKU generation logic
-    const baseCode = `${vendorCode}`;
-    const option1Code = option1 ? `-${option1}` : '';
-    const option2Code = option2 ? `-${option2}` : '';
-    const option3Code = option3 ? `-${option3}` : '';
-    const sequenceCode = `-${String(sequence).padStart(3, '0')}`; // pad sequence with leading zeros
-    return `${baseCode}${option1Code}${option2Code}${option3Code}${sequenceCode}`.toUpperCase();
-  }
-
-  generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode) {
-    // Customize this function as per your Barcode generation logic
-    return `${shopLocationCode}${productId}${sequenceCode}${listingTypeCode}`.toUpperCase();
-  }
-
-  addSkuEventListeners() {
-    const skuInputs = this.element.querySelectorAll('.sku-input');
-    skuInputs.forEach((input, index) => {
-      input.addEventListener('input', () => {
-        const sku = input.value;
-        JsBarcode(`#barcode-${index}`, sku, {
-          format: "CODE128",
-          lineColor: "black",
-          width: 2,
-          height: 40,
-          displayValue: true
-        });
-      });
-    });
-  }
-  
   displayExistingVariants(existingVariants) {
-    console.log("Existing Variants:", existingVariants);  // Add this line
-    const storedValues = {};
-    existingVariants.forEach((variant, index) => {
-        storedValues[index] = { sku: variant.sku, price: variant.price };
-    });
-    this.displayVariants(existingVariants.map(v => [v.option1, v.option2, v.option3]), storedValues);
+    const variants = existingVariants.map(v => [v.option1, v.option2, v.option3]);
+    this.displayVariants(variants);
   }
 }

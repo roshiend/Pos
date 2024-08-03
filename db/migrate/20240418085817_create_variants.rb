@@ -7,11 +7,11 @@ class CreateVariants < ActiveRecord::Migration[7.0]
       t.string :option3
       t.decimal :price, precision: 10, scale: 2
       t.string :title
-      t.string  :unique_id
+      t.string :unique_id, unique: true
       t.string :barcode
       t.integer :position 
       t.references :product, null: false, foreign_key: true
-      t.references :shop_location, null: false, foreign_key: true
+      #t.references :shop_location, null: false, foreign_key: true
       t.timestamps
     end
   end
