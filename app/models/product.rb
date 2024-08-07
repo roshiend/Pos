@@ -19,6 +19,7 @@ class Product < ApplicationRecord
     accepts_nested_attributes_for :variants, allow_destroy: true
   
     before_save :check_option_types
+    
 
     # before_save :compact_option
     # def compact_option

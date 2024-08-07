@@ -7,6 +7,7 @@
     <%= f.fields_for :option_values, (f.object.option_values.any? ? f.object.option_values : f.object.option_values.build) do |option_value| %>
       <div class="option-value">
         <%= option_value.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: option_value.object.name), { include_hidden: false, prompt: 'Select value' }, class: 'product-option-value-select form-control select2', id: "product-option-value-select_#{f.index}_#{option_value.index}", multiple: true %>
+        
         <button type="button" class="delete-value-button" data-action="product-options#removeValue" style="display: none;">Delete Value</button>
         <%= option_value.hidden_field :_destroy %>
         

@@ -18,5 +18,19 @@ class Variant < ApplicationRecord
       break unless Variant.exists?(unique_id: unique_id)
       end
   end
+
+  def options
+    [option1, option2, option3].compact
+  end
+
+  def title
+    self.options.join(' / ') if product.variants.size > 1
+  end
+
+  before_save do
+    self.price ||= product.master_price
+    
+  end
+
  
 end
