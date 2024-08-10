@@ -15,7 +15,6 @@ export default class extends NestedForm {
   initializeVariables() {
     this.lastProductId = parseInt(this.element.dataset.lastProductId, 10) || 0;
     this.currentProductId = this.element.dataset.currentProductId ? String(this.element.dataset.currentProductId).padStart(7, '0') : null;
-    this.selectionOrder = {}; // Track the order of selected option values
   }
 
   initializeSlimSelects() {
@@ -44,31 +43,8 @@ export default class extends NestedForm {
     const existingVariantsData = this.element.dataset.existingVariants;
     if (existingVariantsData) {
       const existingVariants = JSON.parse(existingVariantsData);
-      this.populateSelectionOrderFromExistingVariants(existingVariants);
       this.displayExistingVariants(existingVariants);
     }
-  }
-
-  populateSelectionOrderFromExistingVariants(existingVariants) {
-    this.selectionOrder = {}; // Reset the selection order
-
-    existingVariants.forEach(variant => {
-      const optionTypes = ['option1', 'option2', 'option3'];
-
-      optionTypes.forEach((optionType, index) => {
-        const optionValue = variant[optionType];
-
-        if (optionValue) {
-          if (!this.selectionOrder[optionType]) {
-            this.selectionOrder[optionType] = [];
-          }
-
-          if (!this.selectionOrder[optionType].includes(optionValue)) {
-            this.selectionOrder[optionType].push(optionValue);
-          }
-        }
-      });
-    });
   }
 
   initializeSlimSelect(elements) {
@@ -174,47 +150,12 @@ export default class extends NestedForm {
     }, 200);
 
     if (valuesInput) {
-      valuesInput.addEventListener('change', (event) => {
-        this.storeSelectionOrder(event.target);
-        handleInputChange();
-      });
+      valuesInput.addEventListener('change', handleInputChange);
     }
 
     if (nameInput) {
       nameInput.addEventListener('change', handleInputChange);
     }
-  }
-
-  storeSelectionOrder(selectElement) {
-    const wrapper = selectElement.closest('.product-options-wrapper');
-    const optionType = wrapper.querySelector('.product-option-name-select').value;
-
-    if (!this.selectionOrder) {
-      this.selectionOrder = {};
-    }
-
-    if (!this.selectionOrder[optionType]) {
-      this.selectionOrder[optionType] = [];
-    }
-
-    const selectedValues = Array.from(selectElement.options)
-      .filter(option => option.selected)
-      .map(option => option.value);
-
-    // Update selection order by adding new values at the end
-    selectedValues.forEach(value => {
-      if (!this.selectionOrder[optionType].includes(value)) {
-        this.selectionOrder[optionType].push(value);
-      }
-    });
-
-    // Remove any deselected values from the selection order
-    this.selectionOrder[optionType] = this.selectionOrder[optionType].filter(value => selectedValues.includes(value) || this.existingVariantsInclude(value));
-  }
-
-  existingVariantsInclude(value) {
-    const existingVariants = this.element.dataset.existingVariants ? JSON.parse(this.element.dataset.existingVariants) : [];
-    return existingVariants.some(variant => Object.values(variant).includes(value));
   }
 
   updateVariants() {
@@ -240,10 +181,10 @@ export default class extends NestedForm {
     const optionTypes = [];
     this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach(wrapper => {
       const optionType = wrapper.querySelector('.product-option-name-select').value;
-      const selectedValues = this.selectionOrder[optionType] || [];
+      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked')).map(option => option.value).filter(value => value);
 
-      if (optionType && selectedValues.length > 0) {
-        optionTypes.push({ type: optionType, values: selectedValues });
+      if (optionType && optionValues.length > 0) {
+        optionTypes.push({ type: optionType, values: optionValues });
       }
     });
     return optionTypes;
@@ -265,9 +206,9 @@ export default class extends NestedForm {
     }
 
     const result = [];
-    for (let i = 0; i < first.length; i++) {
-      for (let j = 0; j < restProduct.length; j++) {
-        result.push([first[i], ...restProduct[j]]);
+    for (let i = 0; i < restProduct.length; i++) {
+      for (let j = 0; j < first.length; j++) {
+        result.push([first[j], ...restProduct[i]]);
       }
     }
 
@@ -275,8 +216,23 @@ export default class extends NestedForm {
   }
 
   displayVariants(variants, storedValues = {}) {
-    const container = this.element.querySelector('#variants-container');
-    container.innerHTML = '';  // Clear the container before inserting new variants
+    // Extract the order of options from the dropdowns
+  const dropdownOrders = this.getDropdownOrders();
+
+  // Custom sorting function based on the dropdown orders
+  variants.sort((b, a) => {
+    for (let i = 0; i < b.length; i++) {
+      const orderA = dropdownOrders[i].indexOf(b[i]);
+      const orderB = dropdownOrders[i].indexOf(a[i]);
+     
+      if (orderA > orderB) return -1;
+      if (orderA < orderB) return 1;
+    }
+    return 0;
+  });
+
+  const container = this.element.querySelector('#variants-container');
+  container.innerHTML = '';
 
     const productId = this.currentProductId || String(this.lastProductId + 1).padStart(7, '0');
     const { vendorCode, shopLocationCode, listingTypeCode, subCategoryText } = this.getVariantContext();
@@ -304,10 +260,25 @@ export default class extends NestedForm {
       this.renderBarcode(`#barcode-${index}`, barcode, row);
     });
 
-    container.appendChild(table);  // Append the table to the container after processing all variants
+    container.appendChild(table);
     this.addSkuEventListeners();
   }
-
+  getDropdownOrders() {
+    const dropdownOrders = [];
+  
+    this.element.querySelectorAll('.product-option-value-select').forEach((selectElement, index) => {
+      if (selectElement && selectElement.options) {
+        const options = Array.from(selectElement.options);
+        const order = options.map(option => option.value);
+        dropdownOrders.push(order);
+      } else {
+        console.warn(`Dropdown element at index ${index} is not found or has no options.`);
+      }
+    });
+  
+    return dropdownOrders;
+  }
+  
   createVariantsTable() {
     const table = document.createElement('table');
     table.className = 'table table-bordered';
@@ -419,15 +390,7 @@ export default class extends NestedForm {
         price: variant.price 
       };
     });
-
-    // Generate option arrays from existing data
-    const optionArrays = existingVariants.map(v => [v.option1, v.option2, v.option3]);
-
-    // Ensure option arrays are unique and in the correct order
-    const uniqueOptions = [...new Set(optionArrays.map(JSON.stringify))].map(JSON.parse);
-
-    // Now, display the variants based on the order
-    this.displayVariants(uniqueOptions, storedValues);
+    this.displayVariants(existingVariants.map(v => [v.option1, v.option2, v.option3]), storedValues);
   }
 
   bulkUpdateVariants(actionType, value) {
