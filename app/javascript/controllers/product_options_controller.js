@@ -15,6 +15,8 @@ export default class extends NestedForm {
   initializeVariables() {
     this.lastProductId = parseInt(this.element.dataset.lastProductId, 10) || 0;
     this.currentProductId = this.element.dataset.currentProductId ? String(this.element.dataset.currentProductId).padStart(7, '0') : null;
+    this.positionCounter = 1;
+    this.variantPositions = new Map();
   }
 
   initializeSlimSelects() {
@@ -34,7 +36,7 @@ export default class extends NestedForm {
     this.element.querySelectorAll('.product-options-wrapper').forEach(field => {
       this.addInputEventListeners(field);
     });
-    
+
     this.updateAddButtonVisibility();
     this.updateDeleteButtonVisibility();
   }
@@ -160,8 +162,8 @@ export default class extends NestedForm {
 
   updateVariants() {
     const storedValues = this.storeCurrentVariantValues();
-    const optionTypes = this.getOptionTypes();
-    const variants = this.generateVariants(optionTypes);
+    const optionTypes = this.getSelectedOptions();
+    const variants = this.generateCombinations(optionTypes);
 
     this.displayVariants(variants, storedValues);
   }
@@ -172,119 +174,119 @@ export default class extends NestedForm {
       const id = variant.querySelector(`input[name="product[variants_attributes][${index}][id]"]`)?.value;
       const sku = variant.querySelector(`input[name="product[variants_attributes][${index}][sku]"]`).value;
       const price = variant.querySelector(`input[name="product[variants_attributes][${index}][price]"]`).value;
-      storedValues[index] = { id, sku, price };
+      const position = parseInt(variant.querySelector(`input[name="product[variants_attributes][${index}][position]"]`).value, 10);
+      storedValues[index] = { id, sku, price, position };
     });
     return storedValues;
   }
 
-  getOptionTypes() {
-    const optionTypes = [];
-    this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach(wrapper => {
-      const optionType = wrapper.querySelector('.product-option-name-select').value;
-      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked')).map(option => option.value).filter(value => value);
+  getSelectedOptions() {
+    const selectedOptions = [];
+    this.element.querySelectorAll('.product-options-wrapper').forEach((wrapper) => {
+      const optionName = wrapper.querySelector('.product-option-name-select').value;
+      const selectedValues = Array.from(wrapper.querySelector('.product-option-value-select').selectedOptions)
+        .map(option => ({
+          value: option.value,
+        }));
 
-      if (optionType && optionValues.length > 0) {
-        optionTypes.push({ type: optionType, values: optionValues });
+      if (optionName && selectedValues.length > 0) {
+        selectedOptions.push({
+          name: optionName,
+          values: selectedValues,
+        });
       }
     });
-    return optionTypes;
+
+    console.log("Selected options:", selectedOptions);
+    return selectedOptions;
   }
+  generateCombinations(options) {
+    if (options.length === 0) return [];
 
-  generateVariants(optionTypes) {
-    if (optionTypes.length === 0) return [];
-    return this.customCartesianProduct(optionTypes.map(optionType => optionType.values));
-  }
-
-  customCartesianProduct(arrays) {
-    if (arrays.length === 0) return [];
-
-    const [first, ...rest] = arrays;
-    const restProduct = this.customCartesianProduct(rest);
-
-    if (restProduct.length === 0) {
-      return first.map(value => [value]);
-    }
-
-    const result = [];
-    for (let i = 0; i < restProduct.length; i++) {
-      for (let j = 0; j < first.length; j++) {
-        result.push([first[j], ...restProduct[i]]);
+    const combinations = options.reduce((acc, option) => {
+      if (acc.length === 0) {
+        return option.values.map(value => {
+          const variantKey = `${option.name}:${value.value}`;
+          let position = this.variantPositions.get(variantKey);
+          if (!position) {
+            position = this.positionCounter++;
+            this.variantPositions.set(variantKey, position);
+          }
+          const combination = [{ name: option.name, value: value.value, position }];
+          console.log("Generated combination:", combination);
+          return combination;
+        });
+      } else {
+        return acc.flatMap(combination =>
+          option.values.map(value => {
+            const existingKey = combination.map(v => `${v.name}:${v.value}`).join(' / ');
+            const newCombinationKey = `${existingKey} / ${option.name}:${value.value}`;
+            let position = this.variantPositions.get(existingKey) || this.variantPositions.get(newCombinationKey);
+            if (!position) {
+              position = this.positionCounter++;
+              this.variantPositions.set(newCombinationKey, position);
+            }
+            const newCombination = combination.concat({ name: option.name, value: value.value, position });
+            console.log("Generated combination:", newCombination);
+            return newCombination;
+          })
+        );
       }
-    }
+    }, []);
 
-    return result;
+    console.log("Final combinations with positions:", combinations);
+
+    return combinations;
   }
 
   displayVariants(variants, storedValues = {}) {
-    // Extract the order of options from the dropdowns
-  const dropdownOrders = this.getDropdownOrders();
-
-  // Custom sorting function based on the dropdown orders
-  variants.sort((b, a) => {
-    for (let i = 0; i < b.length; i++) {
-      const orderA = dropdownOrders[i].indexOf(b[i]);
-      const orderB = dropdownOrders[i].indexOf(a[i]);
-     
-      if (orderA > orderB) return -1;
-      if (orderA < orderB) return 1;
-    }
-    return 0;
-  });
-
-  const container = this.element.querySelector('#variants-container');
-  container.innerHTML = '';
-
+    const container = this.element.querySelector('#variants-container');
+    container.innerHTML = '';
+    
     const productId = this.currentProductId || String(this.lastProductId + 1).padStart(7, '0');
     const { vendorCode, shopLocationCode, listingTypeCode, subCategoryText } = this.getVariantContext();
-
+  
     if (!vendorCode || !shopLocationCode || !listingTypeCode) {
       console.error('Vendor, shop location, or listing type is not selected.');
       return;
     }
-
+  
+    // Sort the variants array by the position attribute in ascending order
+    const sortedVariants = variants.sort((a, b) => a[0].position - b[0].position);
+  
     const table = this.createVariantsTable();
     const tbody = table.querySelector('tbody');
-
-    variants.forEach((variant, index) => {
-      const [option1, option2, option3] = variant;
-      const storedValue = storedValues[index] || { sku: '', price: '', id: '' };
+  
+    sortedVariants.forEach((variantCombination, index) => {
+      const variantNames = variantCombination.map(v => v.value);
+      const [option1, option2, option3] = variantNames;
+      const position = variantCombination[0].position;  // Directly take the position from the generated combination
+      const storedValue = storedValues[index] || { sku: '', price: '', id: '', position: position };
       const sku = this.generateSku(vendorCode, option1, option2, option3, index + 1);
       const sequenceCode = String(index + 1).padStart(3, '0');
       const barcode = this.generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode);
-      const extraText = `${vendorCode} - ${variant.join(' / ')}`;
+      const extraText = `${vendorCode} - ${variantNames.join(' / ')}`;
       const subCategoryExtraText = subCategoryText || '';
-
-      const row = this.createVariantRow(variant, storedValue, sku, barcode, extraText, subCategoryExtraText, index);
+  
+      const row = this.createVariantRow(variantCombination, storedValue, sku, barcode, extraText, subCategoryExtraText, index);
       tbody.appendChild(row);
-
+  
       this.renderBarcode(`#barcode-${index}`, barcode, row);
     });
-
+  
     container.appendChild(table);
     this.addSkuEventListeners();
   }
-  getDropdownOrders() {
-    const dropdownOrders = [];
   
-    this.element.querySelectorAll('.product-option-value-select').forEach((selectElement, index) => {
-      if (selectElement && selectElement.options) {
-        const options = Array.from(selectElement.options);
-        const order = options.map(option => option.value);
-        dropdownOrders.push(order);
-      } else {
-        console.warn(`Dropdown element at index ${index} is not found or has no options.`);
-      }
-    });
   
-    return dropdownOrders;
-  }
-  
+
   createVariantsTable() {
     const table = document.createElement('table');
     table.className = 'table table-bordered';
     table.innerHTML = `
       <thead>
         <tr>
+          <th>Position</th>
           <th>Options</th>
           <th>SKU</th>
           <th>Price</th>
@@ -300,13 +302,12 @@ export default class extends NestedForm {
     const row = document.createElement('tr');
     row.className = 'variant';
     row.innerHTML = `
-      <td contenteditable="true" class="variant-option">${variant.join(' / ')}</td>
       <td>
         <input type="hidden" name="product[variants_attributes][${index}][id]" value="${storedValue.id}">
-        <input type="hidden" name="product[variants_attributes][${index}][option1]" value="${variant[0] || ''}">
-        <input type="hidden" name="product[variants_attributes][${index}][option2]" value="${variant[1] || ''}">
-        <input type="hidden" name="product[variants_attributes][${index}][option3]" value="${variant[2] || ''}">
-        <input type="hidden" name="product[variants_attributes][${index}][barcode]" class="barcode-input">
+        <input type="number" name="product[variants_attributes][${index}][position]" class="form-control position-input" value="${storedValue.position}" readonly>
+      </td>
+      <td contenteditable="true" class="variant-option">${variant.map(v => v.value).join(' / ')}</td>
+      <td>
         <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control sku-input" value="${sku}">
       </td>
       <td>
@@ -387,7 +388,8 @@ export default class extends NestedForm {
       storedValues[index] = { 
         id: variant.id, 
         sku: variant.sku, 
-        price: variant.price 
+        price: variant.price,
+        position: variant.position || index + 1
       };
     });
     this.displayVariants(existingVariants.map(v => [v.option1, v.option2, v.option3]), storedValues);

@@ -29,6 +29,7 @@ class ProductsController < ApplicationController
   def create
     logger.debug "Product params: #{product_params.inspect}"
     @product = Product.new(product_params)
+    #process_option_values(@product)
     if @product.save
       
       redirect_to @product, notice: 'Product was successfully created.'
@@ -42,7 +43,9 @@ class ProductsController < ApplicationController
   
     # PATCH/PUT /products/1 or /products/1.json
     def update
+      #process_option_values(@product)
       respond_to do |format|
+        
         if @product.update(product_params)
           format.html { redirect_to @product, notice: 'Product was successfully updated.' }
           format.json { render :show, status: :ok, location: @product }
@@ -69,37 +72,7 @@ class ProductsController < ApplicationController
     end
   end
 
-  def create_variants
-    # @product = Product.find_or_initialize_by(params[:product_id])
 
-    # combinations = Product.generate_variants(params[:option_type_attributes])
-   
-    
-    #  combinations.map! { |variant| variant.join(' / ') }
-
-    # puts "combinations---->#{combinations}"
-    
-
-    # respond_to do |format|
-    #   format.turbo_stream do
-    #     render turbo_stream: turbo_stream.replace("variants-container", partial: "products/variants", locals: { combinations: combinations, product: @product })
-    #   end
-    #   format.html { redirect_to some_path } # Handle other formats if necessary
-    # end
-    option_type_attributes = params[:option_type_attributes]
-
-    # Assuming you have a Product model and a method to generate variants
-    
-
-    # Call the generate_variants method with the option_type_attributes
-    Product.generate_variants(option_type_attributes)
-
-    # Render the updated variants partial view
-    respond_to do |format|
-      format.html { render partial: 'variants' }
-    end
-  end
-  
   
 
   private
@@ -113,24 +86,28 @@ class ProductsController < ApplicationController
       params.require(:product).permit(:name,:description,:master_price,:product_type_id, :category_id, :sub_category_id, :shop_location_id, :listing_type_id, :vendor_id,variants_attributes: [:id,:option1, :option2, :option3, :sku, :price,:unique_id,:barcode,:position,:title],option_types_attributes:[:id,:name,:_destroy,:position,option_values_attributes: [:id,:position,:_destroy,name:[]]])
     end
 
+    # def process_option_values(product)
+    #   product.option_types.each do |option_type|
+    #     option_type.option_values.each do |option_value|
+    #       option_value.name = option_value.name.split(',').map(&:strip) if option_value.name.is_a?(String)
+    #     end
+    #   end
+    # end
     
-
-
+    # def process_option_values(product)
+    #   product.option_types.each do |option_type|
+    #     option_type.option_values.each do |option_value|
+    #       if option_value.name.is_a?(String)
+    #         # Split the comma-separated values into an array
+    #         option_value_names = option_value.name.split(',').map(&:strip).reject(&:blank?)
     
-
+    #         # Optionally handle the case where there might be multiple values
+    #         option_value.name = option_value_names.join(', ') # Join back into a string or store as needed
     
-    
-    
-
-
-    
-    
-    
-
-
-    
-    
-     
-
-    
+    #         # If `name` should remain an array in your database, this step might differ.
+    #       end
+    #     end
+    #   end
+    # end
+  
 end

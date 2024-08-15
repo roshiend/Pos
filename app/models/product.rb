@@ -19,7 +19,7 @@ class Product < ApplicationRecord
     accepts_nested_attributes_for :variants, allow_destroy: true
   
     before_save :check_option_types
-    
+    # before_save :process_option_values
 
     # before_save :compact_option
     # def compact_option
@@ -36,6 +36,14 @@ class Product < ApplicationRecord
       end
     end
   end
+
+  # def process_option_values
+  #   self.option_values.each do |option_value|
+  #     if option_value.name.is_a?(String)
+  #       option_value.name = option_value.name.split(',').map(&:strip)
+  #     end
+  #   end
+  # end
     
     
       
