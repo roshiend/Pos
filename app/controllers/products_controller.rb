@@ -27,7 +27,7 @@ class ProductsController < ApplicationController
   end
 
   def create
-    logger.debug "Product params: #{product_params.inspect}"
+    #logger.debug "Product params: #{product_params.inspect}"
     @product = Product.new(product_params)
     #process_option_values(@product)
     if @product.save

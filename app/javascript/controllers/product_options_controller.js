@@ -3,12 +3,17 @@ import SlimSelect from 'slim-select';
 import JsBarcode from 'jsbarcode';
 
 export default class extends NestedForm {
+  // Map to store the arrays of selected values for each option_value field
+  selectedFieldMap = new Map();
+
+  // Array to track the order of option_value fields based on when selections are made
+  fieldOrder = [];
+
   connect() {
     super.connect();
     console.log('Controller loaded!');
     this.updateAddButtonVisibility();
-     // Ensure existing pre-selected option_types have their positions set correctly
-    this.updateOptionTypePositions();
+    //this.updateOptionTypePositions(); // Ensure existing pre-selected option_types have their positions set correctly
 
     this.lastProductId = parseInt(this.element.dataset.lastProductId, 10) || 0;
     this.currentProductId = this.element.dataset.currentProductId ? String(this.element.dataset.currentProductId).padStart(7, '0') : null;
@@ -20,7 +25,7 @@ export default class extends NestedForm {
       this.addInputEventListeners(field);
     });
 
-    this.updateDeleteButtonVisibility();
+    
 
     const vendorSelect = document.querySelector('#vendor-select');
     const shopLocationSelect = document.querySelector('#shop-location-select');
@@ -64,8 +69,8 @@ export default class extends NestedForm {
     const visibleExistingFieldsCount = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').length;
 
     if (visibleExistingFieldsCount < 3) {
-      const newIndex = visibleExistingFieldsCount;
-      const newTemplateContent = templateContent.replace(/NEW_RECORD/g, newIndex);
+      const timestamp = Date.now(); // Gets the current timestamp in milliseconds
+      const newTemplateContent = templateContent.replace(/NEW_RECORD/g, timestamp);
 
       this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
       const newField = this.targetTarget.lastElementChild;
@@ -74,53 +79,17 @@ export default class extends NestedForm {
       this.initializeSlimSelect(selectElements);
       this.addInputEventListeners(newField);
       this.updateAddButtonVisibility();
-      this.updateDeleteButtonVisibility();
+      
       this.updateVariants();
     } else {
       console.log('Maximum number of fields reached.');
     }
   }
 
-  addValue(event) {
-    const button = event.target;
-    const wrapper = button.closest('.product-options-wrapper');
-    const valueContainer = wrapper.querySelector('[data-product-options-target="valueContainer"]');
-    const valueTemplate = wrapper.querySelector('[data-product-options-target="valueTemplate"]').innerHTML;
+  
 
-    const existingValueFields = valueContainer.querySelectorAll('.option-value:not([style*="display: none"])');
-    const newValueIndex = existingValueFields.length;
-
-    const newValueContent = valueTemplate.replace(/NEW_VALUE_RECORD/g, newValueIndex);
-    valueContainer.insertAdjacentHTML('beforeend', newValueContent);
-
-    const newField = valueContainer.lastElementChild;
-    const selectElements = newField.querySelectorAll('.product-option-value-select');
-
-    this.initializeSlimSelect(selectElements);
-    this.addInputEventListeners(newField);
-    this.updateDeleteButtonVisibility();
-    this.updateVariants();
-  }
-
-  removeValue(event) {
-    const valueField = event.target.closest('.option-value');
-    if (valueField) {
-      valueField.querySelector('[name*="[_destroy]"]').value = "1";
-      valueField.style.display = 'none';
-      this.updateDeleteButtonVisibility();
-      this.updateVariants();
-    }
-  }
-
-  updateDeleteButtonVisibility() {
-    this.element.querySelectorAll('.product-options-wrapper').forEach((wrapper) => {
-      const visibleValues = wrapper.querySelectorAll('.option-value:not([style*="display: none"])');
-      visibleValues.forEach((field) => {
-        const deleteButton = field.querySelector('.delete-value-button');
-        deleteButton.style.display = visibleValues.length > 1 ? 'inline' : 'none';
-      });
-    });
-  }
+  
+  
 
   remove(event) {
     const wrapper = event.target.closest('.product-options-wrapper');
@@ -130,13 +99,13 @@ export default class extends NestedForm {
         valueField.querySelector('[name*="[_destroy]"]').value = "1";
         valueField.style.display = 'none';
       });
-  
+
       wrapper.querySelector('[name*="[_destroy]"]').value = "1";
       wrapper.style.display = 'none';
-  
+
       // Update positions of the remaining option types
-      this.updateOptionTypePositions();
-  
+     // this.updateOptionTypePositions();
+
       // Re-evaluate the visibility of the add button and update variants
       this.updateAddButtonVisibility();
       this.updateVariants();
@@ -152,42 +121,80 @@ export default class extends NestedForm {
   addInputEventListeners(field) {
     const nameInput = field.querySelector('.product-option-name-select');
     const valuesInput = field.querySelector('.product-option-value-select');
-  
+
     const handleInputChange = () => {
-      this.updateOptionTypePositions();
+      
       this.updateVariants();
     };
-  
+
     if (valuesInput) {
       valuesInput.addEventListener('change', handleInputChange);
     }
-  
+
     if (nameInput) {
       nameInput.addEventListener('change', handleInputChange);
     }
   }
-  
-  updateOptionTypePositions() {
-  // Select all visible product option wrappers
-  const optionWrappers = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])');
 
-  optionWrappers.forEach((wrapper, index) => {
-    const optionTypeElement = wrapper.querySelector('.product-option-name-select');
-    const optionType = optionTypeElement.value;
+  // updateOptionTypePositions() {
+  //   // Select all visible product option wrappers
+  //   const optionWrappers = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])');
 
-    // Assign position as index + 1 (to keep positions starting from 1)
-    const position = index + 1;
+  //   optionWrappers.forEach((wrapper, index) => {
+  //     const optionTypeElement = wrapper.querySelector('.product-option-name-select');
+  //     const optionType = optionTypeElement.value;
 
-    // Update the position in the dataset or any other necessary attribute
-    optionTypeElement.dataset.position = position;
+  //     // Assign position as index + 1 (to keep positions starting from 1)
+  //     const position = index + 1;
 
-    // Log the updated position for debugging
-    console.log(`Option Type: ${optionType}, Position: ${position}`);
+  //     // Update the position in the dataset or any other necessary attribute
+  //     optionTypeElement.dataset.position = position;
 
-    // Additionally, update the name attribute to reflect the new position
-    optionTypeElement.setAttribute('name', `product[option_types_attributes][${index}][name]`);
-  });
-}
+  //     // Log the updated position for debugging
+  //     console.log(`Option Type: ${optionType}, Position: ${position}`);
+
+  //     // Additionally, update the name attribute to reflect the new position
+  //     optionTypeElement.setAttribute('name', `product[option_types_attributes][${index}][name]`);
+  //   });
+  // }
+
+  updateOptionValueFieldPositions(valuesInput) {
+    // Get the unique ID of the current valuesInput to track its selections
+    const inputId = valuesInput.id;
+
+    // Initialize or get the existing selected array for this field
+    let selectedOptions = this.selectedFieldMap.get(inputId) || [];
+
+    // Get the currently selected options
+    const currentSelections = Array.from(valuesInput.selectedOptions).map(option => option.value);
+
+    // Add newly selected options while maintaining the original order
+    currentSelections.forEach(value => {
+      if (!selectedOptions.includes(value)) {
+        selectedOptions.push(value);
+      }
+    });
+
+    // Remove options that were deselected
+    selectedOptions = selectedOptions.filter(value => currentSelections.includes(value));
+
+    // Store the updated order of selected options back in the map
+    this.selectedFieldMap.set(inputId, selectedOptions);
+
+    // If this is the first time interacting with this field, add it to the fieldOrder array
+    if (!this.fieldOrder.includes(inputId)) {
+      this.fieldOrder.push(inputId);
+    }
+
+    // Assign a position to the entire array of selected options based on the order of the fields
+    const position = this.fieldOrder.indexOf(inputId) + 1;
+
+    // Log the array and its position for debugging
+    console.log(`Field ID: ${inputId}, Selected Values: ${JSON.stringify(selectedOptions)}, Position: ${position}`);
+
+    // Save or use this position and array as needed
+    // For example, you could set it in a hidden input field, save it in the dataset, or process it further.
+  }
 
   updateVariants() {
     const storedValues = this.storeCurrentVariantValues();
@@ -219,27 +226,27 @@ export default class extends NestedForm {
 
   generateVariants(optionTypes) {
     if (optionTypes.length === 0) return [];
-  
+
     const customCartesianProduct = (arrays) => {
       if (arrays.length === 0) return [];
-  
+
       const [first, ...rest] = arrays;
       const restProduct = customCartesianProduct(rest);
-  
+
       if (restProduct.length === 0) {
         return first.map(value => [value]);
       }
-  
+
       const result = [];
       for (let i = 0; i < restProduct.length; i++) {
         for (let j = 0; j < first.length; j++) {
           result.push([first[j], ...restProduct[i]]);
         }
       }
-  
+
       return result;
     };
-  
+
     const arrays = optionTypes.map(optionType => optionType.values);
     return customCartesianProduct(arrays);
   }
@@ -254,7 +261,7 @@ export default class extends NestedForm {
     } else {
       productId = String(this.lastProductId + 1).padStart(7, '0');
     }
-  
+
     const vendorId = document.querySelector('#vendor-select').value;
     const shopLocationId = document.querySelector('#shop-location-select').value;
     const subCategorySelect = document.querySelector('#sub-category-select');
@@ -289,13 +296,13 @@ export default class extends NestedForm {
         <th>Select</th>
       </tr>`;
     table.appendChild(thead);
-  
+
     const tbody = document.createElement('tbody');
-  
+
     variants.forEach((variant, index) => {
       const [option1, option2, option3] = variant;
       const storedValue = storedValues[index] || { sku: '', price: '', id: ''}; // Include id here if it exists
-      
+
       const sku = this.generateSku(vendorCode, option1, option2, option3, index + 1);
 
       const sequenceCode = String(index + 1).padStart(3, '0'); // pad with leading zeros to make it 3 characters
@@ -303,7 +310,7 @@ export default class extends NestedForm {
       const barcode = this.generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode);
       const extraText = `${vendorCode} - ${variant.join(' / ')}`;
       const subCategoryExtraText = subCategoryId ? subCategoryText : '';
-      
+
       const row = document.createElement('tr');
       row.className = 'variant';
       row.innerHTML = `
@@ -316,7 +323,7 @@ export default class extends NestedForm {
           <input type="hidden" name="product[variants_attributes][${index}][barcode]" class="barcode-input">
           <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control sku-input" value="${sku}">
         </td>
-        
+
         <td>
           <input type="text" name="product[variants_attributes][${index}][price]" class="form-control price-input" value="${storedValue.price}">
         </td>
@@ -349,7 +356,7 @@ export default class extends NestedForm {
       });
 
     });
-  
+
     table.appendChild(tbody);
     container.appendChild(table);
 
@@ -384,15 +391,15 @@ export default class extends NestedForm {
       });
     });
   }
-  
+
   displayExistingVariants(existingVariants) {
     console.log("Existing Variants:", existingVariants);
     const storedValues = {};
     existingVariants.forEach((variant, index) => {
-      storedValues[index] = { 
+      storedValues[index] = {
         id: variant.id,  // Include the id here
-        sku: variant.sku, 
-        price: variant.price 
+        sku: variant.sku,
+        price: variant.price
       };
     });
     this.displayVariants(existingVariants.map(v => [v.option1, v.option2, v.option3]), storedValues);

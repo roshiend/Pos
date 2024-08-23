@@ -1,22 +1,20 @@
-<div class="product-options-wrapper">
+<div class="product-options-wrapper"data-new-record="<%= f.object.new_record? %>">
   <% cache "option_type_list" do %>
-    <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.id] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control', id: "product-option-name-select_#{f.index}" %>
+      
+    <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.name] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control slim-select', id: "product-option-name-select_#{f.index}" %>
   <% end %>
   
   <div data-product-options-target="valueContainer">
     <%= f.fields_for :option_values, (f.object.option_values.any? ? f.object.option_values : f.object.option_values.build) do |option_value| %>
       <div class="option-value">
-        <%= option_value.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: option_value.object.name), { include_hidden: false, prompt: 'Select value' }, class: 'product-option-value-select form-control select2', id: "product-option-value-select_#{f.index}_#{option_value.index}", multiple: true %>
+        <%= option_value.select :name, options_for_select(OptionValueSet.all.map { |ov| [ov.value, ov.value] }, selected: option_value.object.name), { include_hidden: false, prompt: 'Select value' }, class: 'product-option-value-select form-control slim-select', id: "product-option-value-select_#{f.index}_#{option_value.index}", multiple: true %>
         
-        <button type="button" class="delete-value-button" data-action="product-options#removeValue" style="display: none;">Delete Value</button>
-        <%= option_value.hidden_field :_destroy %>
         
+        <%= option_value.hidden_field :_destroy, value: false%>
       </div>
     <% end %>
   </div>
   
-  <!-- <button type="button" data-action="product-options#addValue">Add Value</button> -->
   <button type="button" data-action="product-options#remove">Remove Option</button>
   <%= f.hidden_field :_destroy, value: false %>
- 
 </div>
