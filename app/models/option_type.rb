@@ -1,18 +1,22 @@
 class OptionType < ApplicationRecord
     belongs_to :product, optional: false
-    has_many :option_values, dependent: :destroy
-    accepts_nested_attributes_for :option_values, allow_destroy: true
-  
-    
+     
+     # Ensure position uniqueness within the product
+    validates :position, uniqueness: { scope: :product_id }
+    validates :name, :value, presence: true
+
     before_create :set_initial_position
     before_update :assign_position_on_update
     before_destroy :rearrange_positions
-  
+
+     
     private
   
     def set_initial_position
       max_position = product.option_types.maximum(:position) || 0
       self.position = max_position + 1
+
+    
     end
 
     def assign_position_on_update

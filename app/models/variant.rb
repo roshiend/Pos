@@ -1,13 +1,15 @@
 class Variant < ApplicationRecord
   belongs_to :product, optional: false
   #belongs_to :shop_location
-  has_many :option_value_variants, dependent: :destroy
-  has_many :option_values, through: :option_value_variants
+  has_many :option_types, through: :product
 
-  accepts_nested_attributes_for :option_value_variants, allow_destroy: true
+  validate :options
+
+ 
 
   # Ensure unique_id is set before creating the record
   before_create :set_unique_id
+  
 
   private
 
@@ -18,19 +20,17 @@ class Variant < ApplicationRecord
       break unless Variant.exists?(unique_id: unique_id)
       end
   end
-
+ 
   def options
-    [option1, option2, option3].compact
-  end
-
-  def title
-    self.options.join(' / ') if product.variants.size > 1
+    [option1, option2, option3].compact.empty?
   end
 
   before_save do
     self.price ||= product.master_price
     
   end
+   
+ 
 
  
 end

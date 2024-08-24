@@ -76,6 +76,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_07_24_195433) do
 
   create_table "option_types", force: :cascade do |t|
     t.string "name"
+    t.string "value", default: [], null: false, array: true
     t.integer "position"
     t.bigint "product_id", null: false
     t.datetime "created_at", null: false

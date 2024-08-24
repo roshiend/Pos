@@ -1,14 +1,25 @@
 class ProductsController < ApplicationController
   before_action :set_product, only: %i[ show edit update destroy ]
-  
+ 
   # GET /products or /products.json
   def index
-    @products = Product.all
+    @products = Product.includes(:option_types, :variants).all
+  
+    render json: @products.as_json(include: { 
+      option_types: {  }, 
+      variants: {}
+    })
    
   end
 
   # GET /products/1 or /products/1.json
   def show
+    # @products = Product.includes(:option_types, :variants).all
+  
+    # render json: @products.as_json(include: { 
+    #   option_types: { }, 
+    #   variants: {}
+    # })
   end
 
   # GET /products/new
@@ -28,6 +39,7 @@ class ProductsController < ApplicationController
 
   def create
     #logger.debug "Product params: #{product_params.inspect}"
+    
     @product = Product.new(product_params)
     #process_option_values(@product)
     if @product.save
@@ -43,7 +55,8 @@ class ProductsController < ApplicationController
   
     # PATCH/PUT /products/1 or /products/1.json
     def update
-      #process_option_values(@product)
+      
+     
       respond_to do |format|
         
         if @product.update(product_params)
@@ -78,36 +91,15 @@ class ProductsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_product
-      @product = Product.includes(option_types: :option_values).find(params[:id])
+      @product = Product.find(params[:id])
     end
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:name,:description,:master_price,:product_type_id, :category_id, :sub_category_id, :shop_location_id, :listing_type_id, :vendor_id,variants_attributes: [:id,:option1, :option2, :option3, :sku, :price,:unique_id,:barcode,:position,:title],option_types_attributes:[:id,:name,:_destroy,:position,option_values_attributes: [:id,:position,:_destroy,name:[]]])
+      params.require(:product).permit(:name,:description,:master_price,:product_type_id, :category_id, :sub_category_id, :shop_location_id, :listing_type_id, :vendor_id,variants_attributes: [:id,:option1, :option2, :option3, :sku, :price,:unique_id,:barcode,:position,:title],option_types_attributes:[:id,:name,:_destroy,:position,value:[]])
     end
 
-    # def process_option_values(product)
-    #   product.option_types.each do |option_type|
-    #     option_type.option_values.each do |option_value|
-    #       option_value.name = option_value.name.split(',').map(&:strip) if option_value.name.is_a?(String)
-    #     end
-    #   end
-    # end
     
-    # def process_option_values(product)
-    #   product.option_types.each do |option_type|
-    #     option_type.option_values.each do |option_value|
-    #       if option_value.name.is_a?(String)
-    #         # Split the comma-separated values into an array
-    #         option_value_names = option_value.name.split(',').map(&:strip).reject(&:blank?)
-    
-    #         # Optionally handle the case where there might be multiple values
-    #         option_value.name = option_value_names.join(', ') # Join back into a string or store as needed
-    
-    #         # If `name` should remain an array in your database, this step might differ.
-    #       end
-    #     end
-    #   end
-    # end
+   
   
 end

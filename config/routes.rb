@@ -5,14 +5,12 @@ Rails.application.routes.draw do
   
   resources :product_types
   resources :vendors
-  resources :option_value_variants
+  
   resources :variants
   resources :option_value_sets
   resources :option_type_sets
   resources :products do
-    resources :option_types  do
-      resources :option_values
-    end
+    resources :option_types 
   end 
 
   resources :variants 

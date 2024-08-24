@@ -136,65 +136,7 @@ export default class extends NestedForm {
     }
   }
 
-  // updateOptionTypePositions() {
-  //   // Select all visible product option wrappers
-  //   const optionWrappers = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])');
-
-  //   optionWrappers.forEach((wrapper, index) => {
-  //     const optionTypeElement = wrapper.querySelector('.product-option-name-select');
-  //     const optionType = optionTypeElement.value;
-
-  //     // Assign position as index + 1 (to keep positions starting from 1)
-  //     const position = index + 1;
-
-  //     // Update the position in the dataset or any other necessary attribute
-  //     optionTypeElement.dataset.position = position;
-
-  //     // Log the updated position for debugging
-  //     console.log(`Option Type: ${optionType}, Position: ${position}`);
-
-  //     // Additionally, update the name attribute to reflect the new position
-  //     optionTypeElement.setAttribute('name', `product[option_types_attributes][${index}][name]`);
-  //   });
-  // }
-
-  updateOptionValueFieldPositions(valuesInput) {
-    // Get the unique ID of the current valuesInput to track its selections
-    const inputId = valuesInput.id;
-
-    // Initialize or get the existing selected array for this field
-    let selectedOptions = this.selectedFieldMap.get(inputId) || [];
-
-    // Get the currently selected options
-    const currentSelections = Array.from(valuesInput.selectedOptions).map(option => option.value);
-
-    // Add newly selected options while maintaining the original order
-    currentSelections.forEach(value => {
-      if (!selectedOptions.includes(value)) {
-        selectedOptions.push(value);
-      }
-    });
-
-    // Remove options that were deselected
-    selectedOptions = selectedOptions.filter(value => currentSelections.includes(value));
-
-    // Store the updated order of selected options back in the map
-    this.selectedFieldMap.set(inputId, selectedOptions);
-
-    // If this is the first time interacting with this field, add it to the fieldOrder array
-    if (!this.fieldOrder.includes(inputId)) {
-      this.fieldOrder.push(inputId);
-    }
-
-    // Assign a position to the entire array of selected options based on the order of the fields
-    const position = this.fieldOrder.indexOf(inputId) + 1;
-
-    // Log the array and its position for debugging
-    console.log(`Field ID: ${inputId}, Selected Values: ${JSON.stringify(selectedOptions)}, Position: ${position}`);
-
-    // Save or use this position and array as needed
-    // For example, you could set it in a hidden input field, save it in the dataset, or process it further.
-  }
+  
 
   updateVariants() {
     const storedValues = this.storeCurrentVariantValues();

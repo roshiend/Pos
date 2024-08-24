@@ -8,7 +8,6 @@ class Product < ApplicationRecord
 
     has_many :option_types, dependent: :destroy
     has_many :variants, dependent: :destroy
-    has_many :option_values, through: :option_types
     has_many :sub_categories, through: :category
     
     has_rich_text :description
@@ -19,13 +18,12 @@ class Product < ApplicationRecord
     accepts_nested_attributes_for :variants, allow_destroy: true
   
     before_save :check_option_types
-   
   
   private
 
   def check_option_types
     self.option_types.each do |option_type|
-      if option_type.option_values.empty? || option_type.option_values.all? { |ov| ov.marked_for_destruction? }
+      if option_type.name.blank? || option_type.value.blank? || option_type.value.all? { |v| v.blank? }
         option_type.mark_for_destruction
       end
     end
