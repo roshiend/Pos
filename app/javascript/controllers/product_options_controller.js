@@ -3,6 +3,9 @@ import SlimSelect from 'slim-select';
 import JsBarcode from 'jsbarcode';
 
 export default class extends NestedForm {
+  // Constants
+  MAX_FIELDS = 3;
+
   // Map to store the arrays of selected values for each option_value field
   selectedFieldMap = new Map();
 
@@ -13,36 +16,27 @@ export default class extends NestedForm {
     super.connect();
     console.log('Controller loaded!');
     this.updateAddButtonVisibility();
-    //this.updateOptionTypePositions(); // Ensure existing pre-selected option_types have their positions set correctly
 
     this.lastProductId = parseInt(this.element.dataset.lastProductId, 10) || 0;
-    this.currentProductId = this.element.dataset.currentProductId ? String(this.element.dataset.currentProductId).padStart(7, '0') : null;
+    this.currentProductId = this.element.dataset.currentProductId
+      ? String(this.element.dataset.currentProductId).padStart(7, '0')
+      : null;
 
-    const existingSelectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
+    const existingSelectElements = this.element.querySelectorAll(
+      '.product-option-value-select, .product-option-name-select'
+    );
     this.initializeSlimSelect(existingSelectElements);
 
     this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
       this.addInputEventListeners(field);
     });
 
-    
-
-    const vendorSelect = document.querySelector('#vendor-select');
-    const shopLocationSelect = document.querySelector('#shop-location-select');
-    const subCategorySelect = document.querySelector('#sub-category-select');
-    const listingTypeSelect = document.querySelector('#listing-type-select');
-    if (vendorSelect) {
-      vendorSelect.addEventListener('change', this.updateVariants.bind(this));
-    }
-    if (shopLocationSelect) {
-      shopLocationSelect.addEventListener('change', this.updateVariants.bind(this));
-    }
-    if (subCategorySelect) {
-      subCategorySelect.addEventListener('change', this.updateVariants.bind(this));
-    }
-    if (listingTypeSelect) {
-      listingTypeSelect.addEventListener('change', this.updateVariants.bind(this));
-    }
+    this.bindSelectChangeEvents([
+      '#vendor-select',
+      '#shop-location-select',
+      '#sub-category-select',
+      '#listing-type-select',
+    ]);
 
     const existingVariantsData = this.element.dataset.existingVariants;
     if (existingVariantsData) {
@@ -55,56 +49,64 @@ export default class extends NestedForm {
     elements.forEach((element) => {
       new SlimSelect({
         select: element,
-        placeholder: "Select",
+        placeholder: 'Select',
         allowDeselect: true,
         multiple: true,
         showSearch: false,
-        hideSelectedOption: true
+        hideSelectedOption: true,
       });
+    });
+  }
+
+  bindSelectChangeEvents(selectors) {
+    selectors.forEach((selector) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.addEventListener('change', this.updateVariants.bind(this));
+      }
     });
   }
 
   add() {
     const templateContent = this.templateTarget.innerHTML;
-    const visibleExistingFieldsCount = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').length;
+    const visibleExistingFieldsCount = this.element.querySelectorAll(
+      '.product-options-wrapper:not([style*="display: none"])'
+    ).length;
 
-    if (visibleExistingFieldsCount < 3) {
+    if (visibleExistingFieldsCount < this.MAX_FIELDS) {
       const timestamp = Date.now(); // Gets the current timestamp in milliseconds
       const newTemplateContent = templateContent.replace(/NEW_RECORD/g, timestamp);
 
       this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
       const newField = this.targetTarget.lastElementChild;
-      const selectElements = newField.querySelectorAll('.product-option-value-select, .product-option-name-select');
+      const selectElements = newField.querySelectorAll(
+        '.product-option-value-select, .product-option-name-select'
+      );
 
       this.initializeSlimSelect(selectElements);
       this.addInputEventListeners(newField);
       this.updateAddButtonVisibility();
-      
+
       this.updateVariants();
     } else {
       console.log('Maximum number of fields reached.');
     }
   }
 
-  
-
-  
-  
-
   remove(event) {
     const wrapper = event.target.closest('.product-options-wrapper');
     if (wrapper) {
       // Mark the option type as destroyed
       wrapper.querySelectorAll('.option-value').forEach((valueField) => {
-        valueField.querySelector('[name*="[_destroy]"]').value = "1";
+        valueField.querySelector('[name*="[_destroy]"]').value = '1';
         valueField.style.display = 'none';
       });
 
-      wrapper.querySelector('[name*="[_destroy]"]').value = "1";
+      wrapper.querySelector('[name*="[_destroy]"]').value = '1';
       wrapper.style.display = 'none';
 
       // Update positions of the remaining option types
-     // this.updateOptionTypePositions();
+      // this.updateOptionTypePositions();
 
       // Re-evaluate the visibility of the add button and update variants
       this.updateAddButtonVisibility();
@@ -113,9 +115,11 @@ export default class extends NestedForm {
   }
 
   updateAddButtonVisibility() {
-    const visibleFields = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])'));
+    const visibleFields = Array.from(
+      this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')
+    );
     const addButton = this.element.querySelector('[data-action="product-options#add"]');
-    addButton.style.display = visibleFields.length < 3 ? 'block' : 'none';
+    addButton.style.display = visibleFields.length < this.MAX_FIELDS ? 'block' : 'none';
   }
 
   addInputEventListeners(field) {
@@ -123,7 +127,6 @@ export default class extends NestedForm {
     const valuesInput = field.querySelector('.product-option-value-select');
 
     const handleInputChange = () => {
-      
       this.updateVariants();
     };
 
@@ -136,15 +139,15 @@ export default class extends NestedForm {
     }
   }
 
-  
-
   updateVariants() {
     const storedValues = this.storeCurrentVariantValues();
 
     const optionTypes = [];
     this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach((wrapper) => {
       const optionType = wrapper.querySelector('.product-option-name-select').value;
-      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked')).map(option => option.value).filter(value => value);
+      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked'))
+        .map((option) => option.value)
+        .filter((value) => value);
 
       if (optionType && optionValues.length > 0) {
         optionTypes.push({ type: optionType, values: optionValues });
@@ -176,7 +179,7 @@ export default class extends NestedForm {
       const restProduct = customCartesianProduct(rest);
 
       if (restProduct.length === 0) {
-        return first.map(value => [value]);
+        return first.map((value) => [value]);
       }
 
       const result = [];
@@ -189,7 +192,7 @@ export default class extends NestedForm {
       return result;
     };
 
-    const arrays = optionTypes.map(optionType => optionType.values);
+    const arrays = optionTypes.map((optionType) => optionType.values);
     return customCartesianProduct(arrays);
   }
 
@@ -197,12 +200,7 @@ export default class extends NestedForm {
     const container = this.element.querySelector('#variants-container');
     container.innerHTML = '';
 
-    let productId;
-    if (this.currentProductId) {
-      productId = this.currentProductId;
-    } else {
-      productId = String(this.lastProductId + 1).padStart(7, '0');
-    }
+    let productId = this.currentProductId || String(this.lastProductId + 1).padStart(7, '0');
 
     const vendorId = document.querySelector('#vendor-select').value;
     const shopLocationId = document.querySelector('#shop-location-select').value;
@@ -211,11 +209,11 @@ export default class extends NestedForm {
     const subCategoryOption = subCategorySelect.querySelector(`option[value="${subCategoryId}"]`);
     const listingTypeId = document.querySelector('#listing-type-select').value;
 
-    const vendor = window.Vendor.find(v => v.id === parseInt(vendorId));
-    const shopLocation = window.ShopLocation.find(sl => sl.id === parseInt(shopLocationId));
+    const vendor = window.Vendor.find((v) => v.id === parseInt(vendorId));
+    const shopLocation = window.ShopLocation.find((sl) => sl.id === parseInt(shopLocationId));
     const subCategoryCode = subCategoryOption ? subCategoryOption.getAttribute('data-code') : '';
     const subCategoryText = subCategoryOption ? subCategoryOption.textContent : '';
-    const listingType = window.ListingType.find(lt => lt.id === parseInt(listingTypeId));
+    const listingType = window.ListingType.find((lt) => lt.id === parseInt(listingTypeId));
 
     if (!vendor || !shopLocation || !listingType) {
       console.error('Vendor, shop location, or listing type is not selected.');
@@ -236,6 +234,7 @@ export default class extends NestedForm {
         <th>Price</th>
         <th>Barcode</th>
         <th>Select</th>
+        <th>Delete</th>
       </tr>`;
     table.appendChild(thead);
 
@@ -243,11 +242,11 @@ export default class extends NestedForm {
 
     variants.forEach((variant, index) => {
       const [option1, option2, option3] = variant;
-      const storedValue = storedValues[index] || { sku: '', price: '', id: ''}; // Include id here if it exists
+      const storedValue = storedValues[index] || { sku: '', price: '', id: '' };
 
       const sku = this.generateSku(vendorCode, option1, option2, option3, index + 1);
 
-      const sequenceCode = String(index + 1).padStart(3, '0'); // pad with leading zeros to make it 3 characters
+      const sequenceCode = String(index + 1).padStart(3, '0'); 
 
       const barcode = this.generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode);
       const extraText = `${vendorCode} - ${variant.join(' / ')}`;
@@ -276,6 +275,9 @@ export default class extends NestedForm {
         </td>
         <td>
           <input type="checkbox" class="variant-checkbox">
+        </td>
+        <td>
+          <button type="button" class="btn btn-danger delete-variant-button" data-action="product-options#deleteVariant">Delete</button>
         </td>`;
       tbody.appendChild(row);
 
@@ -284,11 +286,11 @@ export default class extends NestedForm {
         const barcode = this.generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode);
 
         JsBarcode(barcodeElement, barcode, {
-          format: "CODE128",
-          lineColor: "black",
+          format: 'CODE128',
+          lineColor: 'black',
           width: 2,
           height: 40,
-          displayValue: true
+          displayValue: true,
         });
 
         const barcodeInput = row.querySelector('.barcode-input');
@@ -296,14 +298,15 @@ export default class extends NestedForm {
           barcodeInput.value = barcode;
         }
       });
-
     });
 
     table.appendChild(tbody);
     container.appendChild(table);
 
     this.addSkuEventListeners();
-  }
+    this.addDeleteButtonEventListeners(); // Add this to attach event listeners to delete buttons
+}
+
 
   generateSku(vendorCode, option1, option2, option3, sequence) {
     const baseCode = `${vendorCode}`;
@@ -324,35 +327,69 @@ export default class extends NestedForm {
       input.addEventListener('input', () => {
         const sku = input.value;
         JsBarcode(`#barcode-${index}`, sku, {
-          format: "CODE128",
-          lineColor: "black",
+          format: 'CODE128',
+          lineColor: 'black',
           width: 2,
           height: 40,
-          displayValue: true
+          displayValue: true,
         });
       });
     });
   }
 
   displayExistingVariants(existingVariants) {
-    console.log("Existing Variants:", existingVariants);
+    console.log('Existing Variants:', existingVariants);
     const storedValues = {};
     existingVariants.forEach((variant, index) => {
       storedValues[index] = {
-        id: variant.id,  // Include the id here
+        id: variant.id, // Include the id here
         sku: variant.sku,
-        price: variant.price
+        price: variant.price,
       };
     });
-    this.displayVariants(existingVariants.map(v => [v.option1, v.option2, v.option3]), storedValues);
+    this.displayVariants(
+      existingVariants.map((v) => [v.option1, v.option2, v.option3]),
+      storedValues
+    );
   }
+
+  addDeleteButtonEventListeners() {
+    const deleteButtons = this.element.querySelectorAll('.delete-variant-button');
+    deleteButtons.forEach((button) => {
+        button.addEventListener('click', (event) => {
+            const index = event.target.dataset.index;
+            this.deleteVariant(index);
+        });
+    });
+}
+
+deleteVariant(event) {
+  const button = event.target;
+  const variantRow = button.closest('.variant');
+  if (variantRow) {
+    const destroyInput = variantRow.querySelector('input[name*="[_destroy]"]');
+    if (destroyInput) {
+      destroyInput.value = '1';
+    } else {
+      const hiddenDestroyInput = document.createElement('input');
+      hiddenDestroyInput.setAttribute('type', 'hidden');
+      hiddenDestroyInput.setAttribute('name', `${variantRow.querySelector('input[name*="[id]"]').name.replace('[id]', '[_destroy]')}`);
+      hiddenDestroyInput.value = '1';
+      variantRow.appendChild(hiddenDestroyInput);
+    }
+    variantRow.style.display = 'none';
+  }
+}
+
+
+
 
   bulkUpdateVariants(actionType, value) {
     const selectedVariants = this.element.querySelectorAll('.variant-checkbox:checked');
 
     selectedVariants.forEach((checkbox) => {
       const variantRow = checkbox.closest('.variant');
-      switch(actionType) {
+      switch (actionType) {
         case 'price':
           variantRow.querySelector('.price-input').value = value;
           break;
@@ -364,3 +401,4 @@ export default class extends NestedForm {
     });
   }
 }
+ 
