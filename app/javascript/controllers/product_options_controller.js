@@ -6,37 +6,11 @@ export default class extends NestedForm {
   // Constants
   MAX_FIELDS = 3;
 
-  // Map to store the arrays of selected values for each option_value field
-  selectedFieldMap = new Map();
-
-  // Array to track the order of option_value fields based on when selections are made
-  fieldOrder = [];
-
   connect() {
     super.connect();
-    console.log('Controller loaded!');
     this.updateAddButtonVisibility();
-
-    this.lastProductId = parseInt(this.element.dataset.lastProductId, 10) || 0;
-    this.currentProductId = this.element.dataset.currentProductId
-      ? String(this.element.dataset.currentProductId).padStart(7, '0')
-      : null;
-
-    const existingSelectElements = this.element.querySelectorAll(
-      '.product-option-value-select, .product-option-name-select'
-    );
-    this.initializeSlimSelect(existingSelectElements);
-
-    this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
-      this.addInputEventListeners(field);
-    });
-
-    this.bindSelectChangeEvents([
-      '#vendor-select',
-      '#shop-location-select',
-      '#sub-category-select',
-      '#listing-type-select',
-    ]);
+    this.initializeSlimSelect();
+    this.setupEventListeners();
 
     const existingVariantsData = this.element.dataset.existingVariants;
     if (existingVariantsData) {
@@ -45,8 +19,9 @@ export default class extends NestedForm {
     }
   }
 
-  initializeSlimSelect(elements) {
-    elements.forEach((element) => {
+  initializeSlimSelect() {
+    const selectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
+    selectElements.forEach(element => {
       new SlimSelect({
         select: element,
         placeholder: 'Select',
@@ -58,8 +33,13 @@ export default class extends NestedForm {
     });
   }
 
-  bindSelectChangeEvents(selectors) {
-    selectors.forEach((selector) => {
+  setupEventListeners() {
+    this.element.querySelectorAll('.product-options-wrapper').forEach(field => {
+      this.addInputEventListeners(field);
+    });
+
+    const selectChangeElements = ['#vendor-select', '#shop-location-select', '#sub-category-select', '#listing-type-select'];
+    selectChangeElements.forEach(selector => {
       const element = document.querySelector(selector);
       if (element) {
         element.addEventListener('change', this.updateVariants.bind(this));
@@ -69,24 +49,17 @@ export default class extends NestedForm {
 
   add() {
     const templateContent = this.templateTarget.innerHTML;
-    const visibleExistingFieldsCount = this.element.querySelectorAll(
-      '.product-options-wrapper:not([style*="display: none"])'
-    ).length;
+    const visibleExistingFieldsCount = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').length;
 
     if (visibleExistingFieldsCount < this.MAX_FIELDS) {
-      const timestamp = Date.now(); // Gets the current timestamp in milliseconds
+      const timestamp = Date.now();
       const newTemplateContent = templateContent.replace(/NEW_RECORD/g, timestamp);
 
       this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
       const newField = this.targetTarget.lastElementChild;
-      const selectElements = newField.querySelectorAll(
-        '.product-option-value-select, .product-option-name-select'
-      );
-
-      this.initializeSlimSelect(selectElements);
+      this.initializeSlimSelect([newField]);
       this.addInputEventListeners(newField);
       this.updateAddButtonVisibility();
-
       this.updateVariants();
     } else {
       console.log('Maximum number of fields reached.');
@@ -96,28 +69,15 @@ export default class extends NestedForm {
   remove(event) {
     const wrapper = event.target.closest('.product-options-wrapper');
     if (wrapper) {
-      // Mark the option type as destroyed
-      wrapper.querySelectorAll('.option-value').forEach((valueField) => {
-        valueField.querySelector('[name*="[_destroy]"]').value = '1';
-        valueField.style.display = 'none';
-      });
-
       wrapper.querySelector('[name*="[_destroy]"]').value = '1';
       wrapper.style.display = 'none';
-
-      // Update positions of the remaining option types
-      // this.updateOptionTypePositions();
-
-      // Re-evaluate the visibility of the add button and update variants
       this.updateAddButtonVisibility();
       this.updateVariants();
     }
   }
 
   updateAddButtonVisibility() {
-    const visibleFields = Array.from(
-      this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])')
-    );
+    const visibleFields = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])'));
     const addButton = this.element.querySelector('[data-action="product-options#add"]');
     addButton.style.display = visibleFields.length < this.MAX_FIELDS ? 'block' : 'none';
   }
@@ -141,19 +101,7 @@ export default class extends NestedForm {
 
   updateVariants() {
     const storedValues = this.storeCurrentVariantValues();
-
-    const optionTypes = [];
-    this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach((wrapper) => {
-      const optionType = wrapper.querySelector('.product-option-name-select').value;
-      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked'))
-        .map((option) => option.value)
-        .filter((value) => value);
-
-      if (optionType && optionValues.length > 0) {
-        optionTypes.push({ type: optionType, values: optionValues });
-      }
-    });
-
+    const optionTypes = this.getOptionTypes();
     const variants = this.generateVariants(optionTypes);
     this.displayVariants(variants, storedValues);
   }
@@ -169,30 +117,46 @@ export default class extends NestedForm {
     return storedValues;
   }
 
+  getOptionTypes() {
+    const optionTypes = [];
+    this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach(wrapper => {
+      const optionType = wrapper.querySelector('.product-option-name-select').value;
+      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked'))
+        .map(option => option.value)
+        .filter(value => value);
+
+      if (optionType && optionValues.length > 0) {
+        optionTypes.push({ type: optionType, values: optionValues });
+      }
+    });
+    return optionTypes;
+  }
+
   generateVariants(optionTypes) {
-    if (optionTypes.length === 0) return [];
+    if (optionTypes.length === 0 || optionTypes.every(option => option.values.length === 0)) {
+      return [['Default']]; // Single default variant if no options are selected
+    }
 
     const customCartesianProduct = (arrays) => {
       if (arrays.length === 0) return [];
 
-      const [first, ...rest] = arrays;
-      const restProduct = customCartesianProduct(rest);
+      return arrays.reduce((acc, currArray) => {
+        if (acc.length === 0) return currArray.map(value => [value]);
 
-      if (restProduct.length === 0) {
-        return first.map((value) => [value]);
-      }
+        const result = [];
+        acc.forEach(accItem => {
+          currArray.forEach(value => {
+            if (value) {
+              result.push([...accItem, value]);
+            }
+          });
+        });
 
-      const result = [];
-      for (let i = 0; i < restProduct.length; i++) {
-        for (let j = 0; j < first.length; j++) {
-          result.push([first[j], ...restProduct[i]]);
-        }
-      }
-
-      return result;
+        return result;
+      }, []);
     };
 
-    const arrays = optionTypes.map((optionType) => optionType.values);
+    const arrays = optionTypes.map(optionType => optionType.values);
     return customCartesianProduct(arrays);
   }
 
@@ -201,19 +165,14 @@ export default class extends NestedForm {
     container.innerHTML = '';
 
     let productId = this.currentProductId || String(this.lastProductId + 1).padStart(7, '0');
-
     const vendorId = document.querySelector('#vendor-select').value;
     const shopLocationId = document.querySelector('#shop-location-select').value;
-    const subCategorySelect = document.querySelector('#sub-category-select');
-    const subCategoryId = subCategorySelect.value;
-    const subCategoryOption = subCategorySelect.querySelector(`option[value="${subCategoryId}"]`);
+    const subCategoryId = document.querySelector('#sub-category-select').value;
     const listingTypeId = document.querySelector('#listing-type-select').value;
 
-    const vendor = window.Vendor.find((v) => v.id === parseInt(vendorId));
-    const shopLocation = window.ShopLocation.find((sl) => sl.id === parseInt(shopLocationId));
-    const subCategoryCode = subCategoryOption ? subCategoryOption.getAttribute('data-code') : '';
-    const subCategoryText = subCategoryOption ? subCategoryOption.textContent : '';
-    const listingType = window.ListingType.find((lt) => lt.id === parseInt(listingTypeId));
+    const vendor = window.Vendor.find(v => v.id === parseInt(vendorId));
+    const shopLocation = window.ShopLocation.find(sl => sl.id === parseInt(shopLocationId));
+    const listingType = window.ListingType.find(lt => lt.id === parseInt(listingTypeId));
 
     if (!vendor || !shopLocation || !listingType) {
       console.error('Vendor, shop location, or listing type is not selected.');
@@ -245,37 +204,26 @@ export default class extends NestedForm {
       const storedValue = storedValues[index] || { sku: '', price: '', id: '' };
 
       const sku = this.generateSku(vendorCode, option1, option2, option3, index + 1);
-
-      const sequenceCode = String(index + 1).padStart(3, '0'); 
-
+      const sequenceCode = String(index + 1).padStart(3, '0');
       const barcode = this.generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode);
-      const extraText = `${vendorCode} - ${variant.join(' / ')}`;
-      const subCategoryExtraText = subCategoryId ? subCategoryText : '';
 
       const row = document.createElement('tr');
       row.className = 'variant';
       row.innerHTML = `
         <td contenteditable="true" class="variant-option">${variant.join(' / ')}</td>
         <td>
-           <input type="hidden" name="product[variants_attributes][${index}][id]" value="${storedValue.id}">
+          <input type="hidden" name="product[variants_attributes][${index}][id]" value="${storedValue.id}">
           <input type="hidden" name="product[variants_attributes][${index}][option1]" value="${option1 || ''}">
           <input type="hidden" name="product[variants_attributes][${index}][option2]" value="${option2 || ''}">
           <input type="hidden" name="product[variants_attributes][${index}][option3]" value="${option3 || ''}">
           <input type="hidden" name="product[variants_attributes][${index}][barcode]" class="barcode-input">
           <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control sku-input" value="${sku}">
         </td>
-
         <td>
           <input type="text" name="product[variants_attributes][${index}][price]" class="form-control price-input" value="${storedValue.price}">
         </td>
-        <td>
-          <div>${extraText}</div>
-          <div style="text-align: right;">${subCategoryExtraText}</div>
-          <svg id="barcode-${index}"></svg>
-        </td>
-        <td>
-          <input type="checkbox" class="variant-checkbox">
-        </td>
+        <td><svg id="barcode-${index}"></svg></td>
+        <td><input type="checkbox" class="variant-checkbox"></td>
         <td>
           <button type="button" class="btn btn-danger delete-variant-button" data-action="product-options#deleteVariant">Delete</button>
         </td>`;
@@ -283,8 +231,6 @@ export default class extends NestedForm {
 
       requestAnimationFrame(() => {
         const barcodeElement = document.querySelector(`#barcode-${index}`);
-        const barcode = this.generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode);
-
         JsBarcode(barcodeElement, barcode, {
           format: 'CODE128',
           lineColor: 'black',
@@ -304,16 +250,15 @@ export default class extends NestedForm {
     container.appendChild(table);
 
     this.addSkuEventListeners();
-    this.addDeleteButtonEventListeners(); // Add this to attach event listeners to delete buttons
-}
-
+    this.addDeleteButtonEventListeners();
+  }
 
   generateSku(vendorCode, option1, option2, option3, sequence) {
     const baseCode = `${vendorCode}`;
     const option1Code = option1 ? `-${option1}` : '';
     const option2Code = option2 ? `-${option2}` : '';
     const option3Code = option3 ? `-${option3}` : '';
-    const sequenceCode = `-${String(sequence).padStart(3, '0')}`; // pad sequence with leading zeros
+    const sequenceCode = `-${String(sequence).padStart(3, '0')}`;
     return `${baseCode}${option1Code}${option2Code}${option3Code}${sequenceCode}`.toUpperCase();
   }
 
@@ -338,56 +283,97 @@ export default class extends NestedForm {
   }
 
   displayExistingVariants(existingVariants) {
-    console.log('Existing Variants:', existingVariants);
     const storedValues = {};
     existingVariants.forEach((variant, index) => {
       storedValues[index] = {
-        id: variant.id, // Include the id here
+        id: variant.id,
         sku: variant.sku,
         price: variant.price,
       };
     });
     this.displayVariants(
-      existingVariants.map((v) => [v.option1, v.option2, v.option3]),
+      existingVariants.map(v => [v.option1, v.option2, v.option3]),
       storedValues
     );
   }
 
   addDeleteButtonEventListeners() {
     const deleteButtons = this.element.querySelectorAll('.delete-variant-button');
-    deleteButtons.forEach((button) => {
-        button.addEventListener('click', (event) => {
-            const index = event.target.dataset.index;
-            this.deleteVariant(index);
-        });
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', this.deleteVariant.bind(this));
     });
-}
-
-deleteVariant(event) {
-  const button = event.target;
-  const variantRow = button.closest('.variant');
-  if (variantRow) {
-    const destroyInput = variantRow.querySelector('input[name*="[_destroy]"]');
-    if (destroyInput) {
-      destroyInput.value = '1';
-    } else {
-      const hiddenDestroyInput = document.createElement('input');
-      hiddenDestroyInput.setAttribute('type', 'hidden');
-      hiddenDestroyInput.setAttribute('name', `${variantRow.querySelector('input[name*="[id]"]').name.replace('[id]', '[_destroy]')}`);
-      hiddenDestroyInput.value = '1';
-      variantRow.appendChild(hiddenDestroyInput);
-    }
-    variantRow.style.display = 'none';
   }
-}
 
+  deleteVariant(event) {
+    const button = event.target;
+    const variantRow = button.closest('.variant');
+  
+    if (variantRow) {
+      const destroyInput = variantRow.querySelector('input[name*="[_destroy]"]');
+      const option1 = variantRow.querySelector('input[name*="[option1]"]').value;
+      const option2 = variantRow.querySelector('input[name*="[option2]"]').value;
+      const option3 = variantRow.querySelector('input[name*="[option3]"]').value;
+  
+      if (destroyInput) {
+        destroyInput.value = '1';
+      } else {
+        const hiddenDestroyInput = document.createElement('input');
+        hiddenDestroyInput.setAttribute('type', 'hidden');
+        hiddenDestroyInput.setAttribute('name', `${variantRow.querySelector('input[name*="[id]"]').name.replace('[id]', '[_destroy]')}`);
+        hiddenDestroyInput.value = '1';
+        variantRow.appendChild(hiddenDestroyInput);
+      }
+  
+      variantRow.classList.add('variant-deleted');
+      variantRow.style.opacity = '0.5';
+      const undoButton = document.createElement('button');
+      undoButton.classList.add('btn', 'btn-secondary', 'undo-delete-button');
+      undoButton.textContent = 'Undo';
+      undoButton.addEventListener('click', () => this.undoDeleteVariant(variantRow, destroyInput));
+      variantRow.appendChild(undoButton);
+  
+      // Deselect the associated option values
+      this.deselectOptionValues(option1, option2, option3);
+    }
+  }
+  
+  deselectOptionValues(option1, option2, option3) {
+    const optionValueSelectors = this.element.querySelectorAll('.product-option-value-select');
+  
+    optionValueSelectors.forEach(selectElement => {
+      const options = Array.from(selectElement.selectedOptions);
+  
+      // Deselect the options
+      options.forEach(option => {
+        if (option.value === option1 || option.value === option2 || option.value === option3) {
+          option.selected = false;
+        }
+      });
+  
+      // Update the SlimSelect instance
+      const slimSelectInstance = selectElement.slim; // SlimSelect instance is attached to the select element
+      if (slimSelectInstance) {
+        slimSelectInstance.setSelected(options.map(option => option.value).filter(value => value !== option1 && value !== option2 && value !== option3));
+      }
+    });
+  }
+  undoDeleteVariant(variantRow, destroyInput) {
+    if (destroyInput) {
+      destroyInput.value = '0';
+    }
 
-
+    variantRow.classList.remove('variant-deleted');
+    variantRow.style.opacity = '1';
+    const undoButton = variantRow.querySelector('.undo-delete-button');
+    if (undoButton) {
+      undoButton.remove();
+    }
+  }
 
   bulkUpdateVariants(actionType, value) {
     const selectedVariants = this.element.querySelectorAll('.variant-checkbox:checked');
 
-    selectedVariants.forEach((checkbox) => {
+    selectedVariants.forEach(checkbox => {
       const variantRow = checkbox.closest('.variant');
       switch (actionType) {
         case 'price':
@@ -401,4 +387,3 @@ deleteVariant(event) {
     });
   }
 }
- 

@@ -7,7 +7,9 @@ const application = Application.start()
 
 //application.register('product-options', NestedForm)
 // Configure Stimulus development experience
+
 application.debug = false
 window.Stimulus   = application
-
+// Access jQuery globally
+const $ = window.jQuery;
 export { application }

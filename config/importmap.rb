@@ -13,3 +13,6 @@ pin_all_from "app/javascript/channels", under: "channels"
 pin "@hotwired/stimulus", to: "https://ga.jspm.io/npm:@hotwired/stimulus@3.0.1/dist/stimulus.js"
 pin "slim-select" # @2.8.2
 pin "jsbarcode" # @3.11.6
+pin "jquery", to: "https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js", preload: true
+pin "select2", to: "https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js", preload: true
+
