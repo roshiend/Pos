@@ -1,389 +1,119 @@
 import NestedForm from 'stimulus-rails-nested-form';
 import SlimSelect from 'slim-select';
-import JsBarcode from 'jsbarcode';
 
 export default class extends NestedForm {
-  // Constants
-  MAX_FIELDS = 3;
+  static targets = ["optionTemplate", "variantsContainer", "variantTemplate", "option"];
 
   connect() {
-    super.connect();
-    this.updateAddButtonVisibility();
-    this.initializeSlimSelect();
-    this.setupEventListeners();
-
-    const existingVariantsData = this.element.dataset.existingVariants;
-    if (existingVariantsData) {
-      const existingVariants = JSON.parse(existingVariantsData);
-      this.displayExistingVariants(existingVariants);
-    }
+    // Generate initial combinations when the controller connects
+    this.generateVariants();
+    
   }
 
-  initializeSlimSelect() {
-    const selectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
-    selectElements.forEach(element => {
-      new SlimSelect({
-        select: element,
-        placeholder: 'Select',
-        allowDeselect: true,
-        multiple: true,
-        showSearch: false,
-        hideSelectedOption: true,
-      });
+  // Adds a new option field set
+  addOption() {
+    const template = this.optionTemplateTarget.content.cloneNode(true);
+    const timestamp = new Date().getTime();
+
+    template.querySelectorAll("input").forEach((element) => {
+      element.name = element.name.replace(/TEMPLATE_RECORD/g, timestamp);
     });
+
+    this.element.querySelector('.options-container').appendChild(template);
   }
 
-  setupEventListeners() {
-    this.element.querySelectorAll('.product-options-wrapper').forEach(field => {
-      this.addInputEventListeners(field);
-    });
+  // Removes an option field set and its associated variants
+  removeOption(event) {
+    const optionFields = event.target.closest(".option-fields");
+    const destroyField = optionFields.querySelector('input[name*="_destroy"]');
 
-    const selectChangeElements = ['#vendor-select', '#shop-location-select', '#sub-category-select', '#listing-type-select'];
-    selectChangeElements.forEach(selector => {
-      const element = document.querySelector(selector);
-      if (element) {
-        element.addEventListener('change', this.updateVariants.bind(this));
-      }
-    });
-  }
-
-  add() {
-    const templateContent = this.templateTarget.innerHTML;
-    const visibleExistingFieldsCount = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').length;
-
-    if (visibleExistingFieldsCount < this.MAX_FIELDS) {
-      const timestamp = Date.now();
-      const newTemplateContent = templateContent.replace(/NEW_RECORD/g, timestamp);
-
-      this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
-      const newField = this.targetTarget.lastElementChild;
-      this.initializeSlimSelect([newField]);
-      this.addInputEventListeners(newField);
-      this.updateAddButtonVisibility();
-      this.updateVariants();
+    if (destroyField) {
+      destroyField.value = "1"; // Mark option for destruction
+      optionFields.style.display = "none"; // Hide the option fields
     } else {
-      console.log('Maximum number of fields reached.');
-    }
-  }
-
-  remove(event) {
-    const wrapper = event.target.closest('.product-options-wrapper');
-    if (wrapper) {
-      wrapper.querySelector('[name*="[_destroy]"]').value = '1';
-      wrapper.style.display = 'none';
-      this.updateAddButtonVisibility();
-      this.updateVariants();
-    }
-  }
-
-  updateAddButtonVisibility() {
-    const visibleFields = Array.from(this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])'));
-    const addButton = this.element.querySelector('[data-action="product-options#add"]');
-    addButton.style.display = visibleFields.length < this.MAX_FIELDS ? 'block' : 'none';
-  }
-
-  addInputEventListeners(field) {
-    const nameInput = field.querySelector('.product-option-name-select');
-    const valuesInput = field.querySelector('.product-option-value-select');
-
-    const handleInputChange = () => {
-      this.updateVariants();
-    };
-
-    if (valuesInput) {
-      valuesInput.addEventListener('change', handleInputChange);
+      optionFields.remove(); // Remove the new option from the DOM
     }
 
-    if (nameInput) {
-      nameInput.addEventListener('change', handleInputChange);
-    }
+    this.generateVariants(); // Re-generate variant combinations after option removal
   }
 
-  updateVariants() {
-    const storedValues = this.storeCurrentVariantValues();
-    const optionTypes = this.getOptionTypes();
-    const variants = this.generateVariants(optionTypes);
-    this.displayVariants(variants, storedValues);
-  }
+  // Adds a new variant field set
+  addVariant() {
+    const template = this.variantTemplateTarget.content.cloneNode(true);
+    const timestamp = new Date().getTime();
 
-  storeCurrentVariantValues() {
-    const storedValues = {};
-    this.element.querySelectorAll('.variant').forEach((variant, index) => {
-      const id = variant.querySelector(`input[name="product[variants_attributes][${index}][id]"]`)?.value;
-      const sku = variant.querySelector(`input[name="product[variants_attributes][${index}][sku]"]`).value;
-      const price = variant.querySelector(`input[name="product[variants_attributes][${index}][price]"]`).value;
-      storedValues[index] = { id, sku, price };
+    template.querySelectorAll("input").forEach((element) => {
+      element.name = element.name.replace(/TEMPLATE_RECORD/g, timestamp);
+      element.id = element.id.replace(/TEMPLATE_RECORD/g, timestamp);
     });
-    return storedValues;
+
+    this.variantsContainerTarget.appendChild(template);
   }
 
-  getOptionTypes() {
-    const optionTypes = [];
-    this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach(wrapper => {
-      const optionType = wrapper.querySelector('.product-option-name-select').value;
-      const optionValues = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked'))
-        .map(option => option.value)
-        .filter(value => value);
+  // Removes a variant field set
+  removeVariant(event) {
+    const variantFields = event.target.closest(".variant-fields");
+    const destroyField = variantFields.querySelector('input[name*="_destroy"]');
 
-      if (optionType && optionValues.length > 0) {
-        optionTypes.push({ type: optionType, values: optionValues });
+    if (destroyField) {
+      destroyField.value = "1"; // Mark variant for destruction
+      variantFields.style.display = "none"; // Hide the variant fields
+    } else {
+      variantFields.remove(); // Remove the new variant from the DOM
+    }
+  }
+
+  // Generates all possible combinations of variants based on the current options
+  generateVariants() {
+    const optionFields = this.element.querySelectorAll('.option-fields');
+    let optionNames = [];
+    let optionValues = [];
+
+    optionFields.forEach((field) => {
+      const name = field.querySelector('input[name*="[name]"]').value;
+      const values = field.querySelector('input[name*="[value]"]').value.split(',');
+
+      if (name && values.length > 0) {
+        optionNames.push(name);
+        optionValues.push(values);
       }
     });
-    return optionTypes;
+
+    this.createVariantCombinations(optionNames, optionValues);
   }
 
-  generateVariants(optionTypes) {
-    if (optionTypes.length === 0 || optionTypes.every(option => option.values.length === 0)) {
-      return [['Default']]; // Single default variant if no options are selected
-    }
+  // Creates variant field sets based on combinations of the option values
+  createVariantCombinations(optionNames, optionValues) {
+    const variantsContainer = this.variantsContainerTarget;
+    variantsContainer.innerHTML = ""; // Clear existing variants
 
-    const customCartesianProduct = (arrays) => {
-      if (arrays.length === 0) return [];
+    if (optionValues.length === 0) return;
 
-      return arrays.reduce((acc, currArray) => {
-        if (acc.length === 0) return currArray.map(value => [value]);
+    const combinations = this.generateCombinations(optionValues);
 
-        const result = [];
-        acc.forEach(accItem => {
-          currArray.forEach(value => {
-            if (value) {
-              result.push([...accItem, value]);
-            }
-          });
-        });
+    combinations.forEach((combination, index) => {
+      const template = this.variantTemplateTarget.content.cloneNode(true);
+      const timestamp = new Date().getTime() + index;
 
-        return result;
-      }, []);
-    };
-
-    const arrays = optionTypes.map(optionType => optionType.values);
-    return customCartesianProduct(arrays);
-  }
-
-  displayVariants(variants, storedValues = {}) {
-    const container = this.element.querySelector('#variants-container');
-    container.innerHTML = '';
-
-    let productId = this.currentProductId || String(this.lastProductId + 1).padStart(7, '0');
-    const vendorId = document.querySelector('#vendor-select').value;
-    const shopLocationId = document.querySelector('#shop-location-select').value;
-    const subCategoryId = document.querySelector('#sub-category-select').value;
-    const listingTypeId = document.querySelector('#listing-type-select').value;
-
-    const vendor = window.Vendor.find(v => v.id === parseInt(vendorId));
-    const shopLocation = window.ShopLocation.find(sl => sl.id === parseInt(shopLocationId));
-    const listingType = window.ListingType.find(lt => lt.id === parseInt(listingTypeId));
-
-    if (!vendor || !shopLocation || !listingType) {
-      console.error('Vendor, shop location, or listing type is not selected.');
-      return;
-    }
-
-    const vendorCode = vendor.code;
-    const shopLocationCode = shopLocation.code;
-    const listingTypeCode = listingType.code;
-
-    const table = document.createElement('table');
-    table.className = 'table table-bordered';
-    const thead = document.createElement('thead');
-    thead.innerHTML = `
-      <tr>
-        <th>Options</th>
-        <th>SKU</th>
-        <th>Price</th>
-        <th>Barcode</th>
-        <th>Select</th>
-        <th>Delete</th>
-      </tr>`;
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-
-    variants.forEach((variant, index) => {
-      const [option1, option2, option3] = variant;
-      const storedValue = storedValues[index] || { sku: '', price: '', id: '' };
-
-      const sku = this.generateSku(vendorCode, option1, option2, option3, index + 1);
-      const sequenceCode = String(index + 1).padStart(3, '0');
-      const barcode = this.generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode);
-
-      const row = document.createElement('tr');
-      row.className = 'variant';
-      row.innerHTML = `
-        <td contenteditable="true" class="variant-option">${variant.join(' / ')}</td>
-        <td>
-          <input type="hidden" name="product[variants_attributes][${index}][id]" value="${storedValue.id}">
-          <input type="hidden" name="product[variants_attributes][${index}][option1]" value="${option1 || ''}">
-          <input type="hidden" name="product[variants_attributes][${index}][option2]" value="${option2 || ''}">
-          <input type="hidden" name="product[variants_attributes][${index}][option3]" value="${option3 || ''}">
-          <input type="hidden" name="product[variants_attributes][${index}][barcode]" class="barcode-input">
-          <input type="text" name="product[variants_attributes][${index}][sku]" class="form-control sku-input" value="${sku}">
-        </td>
-        <td>
-          <input type="text" name="product[variants_attributes][${index}][price]" class="form-control price-input" value="${storedValue.price}">
-        </td>
-        <td><svg id="barcode-${index}"></svg></td>
-        <td><input type="checkbox" class="variant-checkbox"></td>
-        <td>
-          <button type="button" class="btn btn-danger delete-variant-button" data-action="product-options#deleteVariant">Delete</button>
-        </td>`;
-      tbody.appendChild(row);
-
-      requestAnimationFrame(() => {
-        const barcodeElement = document.querySelector(`#barcode-${index}`);
-        JsBarcode(barcodeElement, barcode, {
-          format: 'CODE128',
-          lineColor: 'black',
-          width: 2,
-          height: 40,
-          displayValue: true,
-        });
-
-        const barcodeInput = row.querySelector('.barcode-input');
-        if (barcodeInput) {
-          barcodeInput.value = barcode;
-        }
+      template.querySelectorAll("input").forEach((element, idx) => {
+        element.name = element.name.replace(/TEMPLATE_RECORD/g, timestamp);
+        element.value = combination[idx]; // Assign the combination values to the fields
       });
-    });
 
-    table.appendChild(tbody);
-    container.appendChild(table);
-
-    this.addSkuEventListeners();
-    this.addDeleteButtonEventListeners();
-  }
-
-  generateSku(vendorCode, option1, option2, option3, sequence) {
-    const baseCode = `${vendorCode}`;
-    const option1Code = option1 ? `-${option1}` : '';
-    const option2Code = option2 ? `-${option2}` : '';
-    const option3Code = option3 ? `-${option3}` : '';
-    const sequenceCode = `-${String(sequence).padStart(3, '0')}`;
-    return `${baseCode}${option1Code}${option2Code}${option3Code}${sequenceCode}`.toUpperCase();
-  }
-
-  generateBarcode(shopLocationCode, productId, sequenceCode, listingTypeCode) {
-    return `${shopLocationCode}${productId}${sequenceCode}${listingTypeCode}`.toUpperCase();
-  }
-
-  addSkuEventListeners() {
-    const skuInputs = this.element.querySelectorAll('.sku-input');
-    skuInputs.forEach((input, index) => {
-      input.addEventListener('input', () => {
-        const sku = input.value;
-        JsBarcode(`#barcode-${index}`, sku, {
-          format: 'CODE128',
-          lineColor: 'black',
-          width: 2,
-          height: 40,
-          displayValue: true,
-        });
-      });
+      variantsContainer.appendChild(template);
     });
   }
 
-  displayExistingVariants(existingVariants) {
-    const storedValues = {};
-    existingVariants.forEach((variant, index) => {
-      storedValues[index] = {
-        id: variant.id,
-        sku: variant.sku,
-        price: variant.price,
-      };
-    });
-    this.displayVariants(
-      existingVariants.map(v => [v.option1, v.option2, v.option3]),
-      storedValues
-    );
-  }
+  // Recursively generates all combinations of the given arrays of option values
+  generateCombinations(arrays, prefix = []) {
+    if (!arrays.length) return [prefix];
 
-  addDeleteButtonEventListeners() {
-    const deleteButtons = this.element.querySelectorAll('.delete-variant-button');
-    deleteButtons.forEach(button => {
-      button.addEventListener('click', this.deleteVariant.bind(this));
-    });
-  }
+    const result = [];
 
-  deleteVariant(event) {
-    const button = event.target;
-    const variantRow = button.closest('.variant');
-  
-    if (variantRow) {
-      const destroyInput = variantRow.querySelector('input[name*="[_destroy]"]');
-      const option1 = variantRow.querySelector('input[name*="[option1]"]').value;
-      const option2 = variantRow.querySelector('input[name*="[option2]"]').value;
-      const option3 = variantRow.querySelector('input[name*="[option3]"]').value;
-  
-      if (destroyInput) {
-        destroyInput.value = '1';
-      } else {
-        const hiddenDestroyInput = document.createElement('input');
-        hiddenDestroyInput.setAttribute('type', 'hidden');
-        hiddenDestroyInput.setAttribute('name', `${variantRow.querySelector('input[name*="[id]"]').name.replace('[id]', '[_destroy]')}`);
-        hiddenDestroyInput.value = '1';
-        variantRow.appendChild(hiddenDestroyInput);
-      }
-  
-      variantRow.classList.add('variant-deleted');
-      variantRow.style.opacity = '0.5';
-      const undoButton = document.createElement('button');
-      undoButton.classList.add('btn', 'btn-secondary', 'undo-delete-button');
-      undoButton.textContent = 'Undo';
-      undoButton.addEventListener('click', () => this.undoDeleteVariant(variantRow, destroyInput));
-      variantRow.appendChild(undoButton);
-  
-      // Deselect the associated option values
-      this.deselectOptionValues(option1, option2, option3);
-    }
-  }
-  
-  deselectOptionValues(option1, option2, option3) {
-    const optionValueSelectors = this.element.querySelectorAll('.product-option-value-select');
-  
-    optionValueSelectors.forEach(selectElement => {
-      const options = Array.from(selectElement.selectedOptions);
-  
-      // Deselect the options
-      options.forEach(option => {
-        if (option.value === option1 || option.value === option2 || option.value === option3) {
-          option.selected = false;
-        }
-      });
-  
-      // Update the SlimSelect instance
-      const slimSelectInstance = selectElement.slim; // SlimSelect instance is attached to the select element
-      if (slimSelectInstance) {
-        slimSelectInstance.setSelected(options.map(option => option.value).filter(value => value !== option1 && value !== option2 && value !== option3));
-      }
-    });
-  }
-  undoDeleteVariant(variantRow, destroyInput) {
-    if (destroyInput) {
-      destroyInput.value = '0';
+    for (let value of arrays[0]) {
+      result.push(...this.generateCombinations(arrays.slice(1), [...prefix, value]));
     }
 
-    variantRow.classList.remove('variant-deleted');
-    variantRow.style.opacity = '1';
-    const undoButton = variantRow.querySelector('.undo-delete-button');
-    if (undoButton) {
-      undoButton.remove();
-    }
-  }
-
-  bulkUpdateVariants(actionType, value) {
-    const selectedVariants = this.element.querySelectorAll('.variant-checkbox:checked');
-
-    selectedVariants.forEach(checkbox => {
-      const variantRow = checkbox.closest('.variant');
-      switch (actionType) {
-        case 'price':
-          variantRow.querySelector('.price-input').value = value;
-          break;
-        case 'sku-prefix':
-          const existingSku = variantRow.querySelector('.sku-input').value;
-          variantRow.querySelector('.sku-input').value = `${value}-${existingSku}`;
-          break;
-      }
-    });
+    return result;
   }
 }

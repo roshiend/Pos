@@ -1,101 +1,95 @@
-<%# app/views/products/_form.html.erb %>
+<%= form_with(model: @product, local: true) do |f| %>
+  <%= f.label :title %>
+  <%= f.text_field :title %>
 
-<%# Add the script tag to pass Vendor and ShopLocation data to the frontend %>
+  <%= f.label :product_type %>
+  <%= f.text_field :product_type %>
 
-<script>
-  window.LastIds = {
-    lastProductId: "<%= @last_product_id %>",
-    lastVariantId: "<%= @last_variant_id %>"
-  };
-  window.Vendor = JSON.parse('<%= raw Vendor.all.to_json(only: [:id, :code]) %>');
-  window.ShopLocation = JSON.parse('<%= raw ShopLocation.all.to_json(only: [:id, :code]) %>');
-  window.ListingType = JSON.parse('<%= raw ListingType.all.to_json(only: [:id, :code]) %>');
-</script>
+  <div data-controller="product-options">
+    <div class="options-container">
+      <h3>Options</h3>
+      <button type="button" data-action="click->product-options#addOption">Add Option</button>
 
-<%= form_with(model: @product, local: true, data: { controller: 'product-options', existing_variants: @product.variants.to_json(only: [:id, :sku, :price, :option1, :option2, :option3,:position]), product_id: @product.id }) do |form| %>
+      <!-- Loop through existing options -->
+      <%= f.fields_for :options do |option_form| %>
+        <div class="option-fields">
+          <%= option_form.hidden_field :id %>
 
+          <%= option_form.label :name, "Option Name" %>
+          <%= option_form.text_field :name, data: { action: "input->product-options#generateVariants" } %>
 
-  <% if product.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(product.errors.count, "error") %> prohibited this product from being saved:</h2>
-      <ul>
-        <% product.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+          <%= option_form.label :value, "Option Values (comma separated)" %>
+          <%= option_form.text_field :value, data: { action: "input->product-options#generateVariants" } %>
+
+          <%= option_form.check_box :_destroy %>
+          <%= option_form.label :_destroy, "Remove this option" %>
+        </div>
+      <% end %>
+
+      <!-- Template for new options -->
+      <template data-product-options-target="optionTemplate">
+        <div class="option-fields">
+          <label>Option Name</label>
+          <input type="text" name="product[options][TEMPLATE_RECORD][name]" data-action="input->product-options#generateVariants">
+
+          <label>Option Values (comma separated)</label>
+          <input type="text" name="product[options][TEMPLATE_RECORD][value]" data-action="input->product-options#generateVariants">
+
+          <button type="button" data-action="click->product-options#removeOption">Remove Option</button>
+        </div>
+      </template>
+      <!-- Template for new variants -->
+    <template data-product-options-target="variantTemplate">
+      <div class="variant-fields">
+        <label>Option 1</label>
+        <input type="text" name="product[variants][TEMPLATE_RECORD][option1]" data-option-index="0">
+
+        <label>Option 2</label>
+        <input type="text" name="product[variants][TEMPLATE_RECORD][option2]" data-option-index="1">
+
+        <label>Option 3</label>
+        <input type="text" name="product[variants][TEMPLATE_RECORD][option3]" data-option-index="2">
+
+        <label>Price</label>
+        <input type="number" name="product[variants][TEMPLATE_RECORD][price]" step="0.01">
+
+        
+
+        <button type="button" data-action="click->product-options#removeVariant">Remove Variant</button>
+      </div>
+    </template>
+      
+    
+
+    <h3>Variants</h3>
+    <div data-product-options-target="variantsContainer">
+      <!-- Loop through existing variants -->
+      <%= f.fields_for :variants do |variant_form| %>
+        <div class="variant-fields">
+          <%= variant_form.hidden_field :id %>
+
+          <%= variant_form.label :option1, "Option 1" %>
+          <%= variant_form.text_field :option1, data: { option_index: 0 } %>
+
+          <%= variant_form.label :option2, "Option 2" %>
+          <%= variant_form.text_field :option2, data: { option_index: 1 } %>
+
+          <%= variant_form.label :option3, "Option 3" %>
+          <%= variant_form.text_field :option3, data: { option_index: 2 } %>
+
+          <%= variant_form.label :price, "Price" %>
+          <%= variant_form.number_field :price, step: 0.01 %>
+
+          
+
+          <%= variant_form.check_box :_destroy %>
+          <%= variant_form.label :_destroy, "Remove this variant" %>
+        </div>
+      <% end %>
     </div>
-  <% end %>
 
-  <template data-product-options-target="template">
-    <%= form.fields_for :option_types, OptionType.new, child_index: 'NEW_RECORD' do |p_options| %>
-      <%= render "product_option_fields", f: p_options %>
-    <% end %>
-  </template>
-
-  
-
-  <div>
-    <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name, placeholder: "Short sleeve t-shirt" %>
+    <button type="button" data-action="click->product-options#addVariant">Add Variant</button>
   </div>
 
-  <div>
-    <%= form.label :description, style: "display: block" %>
-    <%= form.rich_text_area :description %>
-  </div>
-  
-  <div>
-    <%= form.label :Product_type, style: "display: block" %>
-    <%= form.select :product_type_id, options_for_select(ProductType.all.map { |p_type| [p_type.name, p_type.id] }, selected: form.object.product_type_id), { prompt: 'Select Product Type' }, class: 'product_type-select form-control', id: "product_type-select" %>
-  </div>
-
- 
-
-  <div>
-    <%= form.label :category, style: "display: block" %>
-    <%= form.select :category_id, options_for_select(Category.all.map { |category| [category.value, category.id] }, selected: form.object.category_id), { prompt: 'Select Category' }, class: 'category-select form-control', id: "category-select", data: { action: 'change->product-options#updateSubCategories' } %>
-  </div>
-
-  <div>
-    <%= form.label :sub_category, style: "display: block" %>
-    <%= form.select :sub_category_id, options_for_select([], selected: form.object.sub_category_id), { prompt: 'Select Sub-Category' }, class: 'sub_category-select form-control', id: "sub-category-select" %>
-  </div>
-
-  <div>
-    <%= form.label :shop_location, style: "display: block" %>
-    <%= form.select :shop_location_id, options_for_select(ShopLocation.all.map { |shop_location| [shop_location.name, shop_location.id] }, selected: form.object.shop_location_id), { prompt: 'Select Shop Location' }, class: 'shop-location-select form-control', id: "shop-location-select" %>
-  </div>
-  
-  <div>
-    <%= form.label :listing_type, style: "display: block" %>
-    <%= form.select :listing_type_id, options_for_select(ListingType.all.map { |listing_type| [listing_type.name, listing_type.id] }, selected: form.object.listing_type_id), { prompt: 'Select Listing Type' }, class: 'listing-type-select form-control', id: "listing-type-select" %>
-  </div>
-
-  <div>
-    <%= form.label :master_price, style: "display: block" %>
-    <%= form.text_field :master_price %>
-  </div>
-  <br>
-
-  <div>
-    <%= form.label :vendor, style: "display: block" %>
-    <%= form.select :vendor_id, options_for_select(Vendor.all.map { |vendor| [vendor.name, vendor.id] }, selected: form.object.vendor_id), { prompt: 'Select vendor' }, class: 'vendor-select form-control', id: "vendor-select" %>
-  </div>
-  
-  <br>
-
-  <%= form.fields_for :option_types do |p_options| %>
-    <div class="div-product-option-card">
-      <%= render "product_option_fields", f: p_options %>
-    </div>
-  <% end %>
-
-  <div data-product-options-target="target"></div>
-  <button type="button" data-action="product-options#add">Add Option</button>
-  <div id="variants-container"></div>
-  <div class="variants-container"></div>
-
-  <div>
-    <%= form.submit %>
-  </div>
+  <%= f.submit %>
 <% end %>
