@@ -1,5 +1,6 @@
-import NestedForm from 'stimulus-rails-nested-form';
+
 import SlimSelect from 'slim-select';
+import NestedForm from 'stimulus-rails-nested-form';
 
 export default class extends NestedForm {
   static targets = ["optionTemplate", "variantsContainer", "variantTemplate", "option"];
@@ -7,7 +8,16 @@ export default class extends NestedForm {
   connect() {
     // Generate initial combinations when the controller connects
     this.generateVariants();
-    
+
+    // Initialize SlimSelect for any existing multi-select dropdowns
+    this.initializeSlimSelect();
+  }
+
+  initializeSlimSelect() {
+    // Initialize SlimSelect for all select elements with multiple attribute
+    this.element.querySelectorAll('select[multiple]').forEach((element) => {
+      new SlimSelect({ select: element });
+    });
   }
 
   // Adds a new option field set
@@ -15,11 +25,14 @@ export default class extends NestedForm {
     const template = this.optionTemplateTarget.content.cloneNode(true);
     const timestamp = new Date().getTime();
 
-    template.querySelectorAll("input").forEach((element) => {
+    template.querySelectorAll("input, select").forEach((element) => {
       element.name = element.name.replace(/TEMPLATE_RECORD/g, timestamp);
     });
 
-    this.element.querySelector('.options-container').appendChild(template);
+    const newOption = this.element.querySelector('.options-container').appendChild(template);
+
+    // Initialize SlimSelect for the new multi-select dropdown
+    this.initializeSlimSelect();
   }
 
   // Removes an option field set and its associated variants
@@ -71,7 +84,7 @@ export default class extends NestedForm {
 
     optionFields.forEach((field) => {
       const name = field.querySelector('input[name*="[name]"]').value;
-      const values = field.querySelector('input[name*="[value]"]').value.split(',');
+      const values = Array.from(field.querySelector('select[name*="[value][]"]').selectedOptions).map(option => option.value);
 
       if (name && values.length > 0) {
         optionNames.push(name);

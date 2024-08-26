@@ -8,58 +8,27 @@
   <div data-controller="product-options">
     <div class="options-container">
       <h3>Options</h3>
-      <button type="button" data-action="click->product-options#addOption">Add Option</button>
-
-      <!-- Loop through existing options -->
-      <%= f.fields_for :options do |option_form| %>
-        <div class="option-fields">
-          <%= option_form.hidden_field :id %>
-
-          <%= option_form.label :name, "Option Name" %>
-          <%= option_form.text_field :name, data: { action: "input->product-options#generateVariants" } %>
-
-          <%= option_form.label :value, "Option Values (comma separated)" %>
-          <%= option_form.text_field :value, data: { action: "input->product-options#generateVariants" } %>
-
-          <%= option_form.check_box :_destroy %>
-          <%= option_form.label :_destroy, "Remove this option" %>
-        </div>
-      <% end %>
-
+      
       <!-- Template for new options -->
       <template data-product-options-target="optionTemplate">
         <div class="option-fields">
           <label>Option Name</label>
           <input type="text" name="product[options][TEMPLATE_RECORD][name]" data-action="input->product-options#generateVariants">
 
-          <label>Option Values (comma separated)</label>
-          <input type="text" name="product[options][TEMPLATE_RECORD][value]" data-action="input->product-options#generateVariants">
+          <label>Option Values</label>
+          <select name="product[options][TEMPLATE_RECORD][value][]" multiple data-action="change->product-options#generateVariants">
+            <option value="Value1">Value1</option>
+            <option value="Value2">Value2</option>
+            <option value="Value3">Value3</option>
+            <!-- Add more options as needed -->
+          </select>
 
           <button type="button" data-action="click->product-options#removeOption">Remove Option</button>
         </div>
       </template>
-      <!-- Template for new variants -->
-    <template data-product-options-target="variantTemplate">
-      <div class="variant-fields">
-        <label>Option 1</label>
-        <input type="text" name="product[variants][TEMPLATE_RECORD][option1]" data-option-index="0">
-
-        <label>Option 2</label>
-        <input type="text" name="product[variants][TEMPLATE_RECORD][option2]" data-option-index="1">
-
-        <label>Option 3</label>
-        <input type="text" name="product[variants][TEMPLATE_RECORD][option3]" data-option-index="2">
-
-        <label>Price</label>
-        <input type="number" name="product[variants][TEMPLATE_RECORD][price]" step="0.01">
-
-        
-
-        <button type="button" data-action="click->product-options#removeVariant">Remove Variant</button>
-      </div>
-    </template>
       
-    
+      <button type="button" data-action="click->product-options#addOption">Add Option</button>
+    </div>
 
     <h3>Variants</h3>
     <div data-product-options-target="variantsContainer">
@@ -80,13 +49,31 @@
           <%= variant_form.label :price, "Price" %>
           <%= variant_form.number_field :price, step: 0.01 %>
 
-          
-
           <%= variant_form.check_box :_destroy %>
           <%= variant_form.label :_destroy, "Remove this variant" %>
         </div>
       <% end %>
     </div>
+         <!-- Template for new variants -->
+         <template data-product-options-target="variantTemplate">
+          <div class="variant-fields">
+            <label>Option 1</label>
+            <input type="text" name="product[variants][TEMPLATE_RECORD][option1]" data-option-index="0">
+    
+            <label>Option 2</label>
+            <input type="text" name="product[variants][TEMPLATE_RECORD][option2]" data-option-index="1">
+    
+            <label>Option 3</label>
+            <input type="text" name="product[variants][TEMPLATE_RECORD][option3]" data-option-index="2">
+    
+            <label>Price</label>
+            <input type="number" name="product[variants][TEMPLATE_RECORD][price]" step="0.01">
+    
+            
+    
+            <button type="button" data-action="click->product-options#removeVariant">Remove Variant</button>
+          </div>
+        </template>
 
     <button type="button" data-action="click->product-options#addVariant">Add Variant</button>
   </div>
