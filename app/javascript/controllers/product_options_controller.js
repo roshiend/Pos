@@ -6,48 +6,67 @@ export default class extends NestedForm {
   static targets = ["optionTemplate", "variantsContainer", "variantTemplate", "option"];
 
   connect() {
-    // Generate initial combinations when the controller connects
-    this.generateVariants();
+    this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
+      this.addInputEventListeners(field);
+    });
 
-    // Initialize SlimSelect for any existing multi-select dropdowns
-    this.initializeSlimSelect();
+
+   
   }
 
-  initializeSlimSelect() {
-    // Initialize SlimSelect for all select elements with multiple attribute
-    this.element.querySelectorAll('select[multiple]').forEach((element) => {
-      new SlimSelect({ select: element });
+  initializeSlimSelect(elements) {
+    elements.forEach((element) => {
+      new SlimSelect({
+        select: element,
+        placeholder: "Select",
+        allowDeselect: true,
+        multiple: true,
+        showSearch: false,
+        hideSelectedOption: true
+      });
     });
   }
+
 
   // Adds a new option field set
-  addOption() {
-    const template = this.optionTemplateTarget.content.cloneNode(true);
-    const timestamp = new Date().getTime();
+  add() {
+    const templateContent = this.templateTarget.innerHTML;
+    const visibleExistingFieldsCount = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').length;
 
-    template.querySelectorAll("input, select").forEach((element) => {
-      element.name = element.name.replace(/TEMPLATE_RECORD/g, timestamp);
-    });
+    if (visibleExistingFieldsCount < 3) {
+      const timestamp = Date.now(); // Gets the current timestamp in milliseconds
+      const newTemplateContent = templateContent.replace(/NEW_RECORD/g, timestamp);
 
-    const newOption = this.element.querySelector('.options-container').appendChild(template);
+      this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
+      const newField = this.targetTarget.lastElementChild;
+      const selectElements = newField.querySelectorAll('.product-option-value-select, .product-option-name-select');
 
-    // Initialize SlimSelect for the new multi-select dropdown
-    this.initializeSlimSelect();
+      this.initializeSlimSelect(selectElements);
+      this.addInputEventListeners(newField);
+      this.generateVariants(); 
+    } else {
+      console.log('Maximum number of fields reached.');
+    }
   }
 
   // Removes an option field set and its associated variants
-  removeOption(event) {
-    const optionFields = event.target.closest(".option-fields");
-    const destroyField = optionFields.querySelector('input[name*="_destroy"]');
+  remove(event) {
+    const wrapper = event.target.closest('.product-options-wrapper');
+    if (wrapper) {
+      // Mark the option type as destroyed
+      wrapper.querySelectorAll('.option-value').forEach((valueField) => {
+        valueField.querySelector('[name*="[_destroy]"]').value = "1";
+        valueField.style.display = 'none';
+      });
 
-    if (destroyField) {
-      destroyField.value = "1"; // Mark option for destruction
-      optionFields.style.display = "none"; // Hide the option fields
-    } else {
-      optionFields.remove(); // Remove the new option from the DOM
+      wrapper.querySelector('[name*="[_destroy]"]').value = "1";
+      wrapper.style.display = 'none';
+
+      // Update positions of the remaining option types
+     // this.updateOptionTypePositions();
+     this.generateVariants(); 
+    
     }
-
-    this.generateVariants(); // Re-generate variant combinations after option removal
   }
 
   // Adds a new variant field set
@@ -63,8 +82,8 @@ export default class extends NestedForm {
     this.variantsContainerTarget.appendChild(template);
   }
 
-  // Removes a variant field set
-  removeVariant(event) {
+   // Removes a variant field set
+   removeVariant(event) {
     const variantFields = event.target.closest(".variant-fields");
     const destroyField = variantFields.querySelector('input[name*="_destroy"]');
 
@@ -76,24 +95,47 @@ export default class extends NestedForm {
     }
   }
 
+
   // Generates all possible combinations of variants based on the current options
   generateVariants() {
-    const optionFields = this.element.querySelectorAll('.option-fields');
     let optionNames = [];
     let optionValues = [];
-
-    optionFields.forEach((field) => {
-      const name = field.querySelector('input[name*="[name]"]').value;
-      const values = Array.from(field.querySelector('select[name*="[value][]"]').selectedOptions).map(option => option.value);
-
+    this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach((wrapper) => {
+      const name = wrapper.querySelector('.product-option-name-select').value;
+      const values = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked')).map(option => option.value).filter(value => value);
+  
       if (name && values.length > 0) {
         optionNames.push(name);
         optionValues.push(values);
+        console.log(optionValues);
       }
     });
 
     this.createVariantCombinations(optionNames, optionValues);
+    
   }
+  addInputEventListeners(field) {
+    const nameInput = field.querySelector('.product-option-name-select');
+    const valuesInput = field.querySelector('.product-option-value-select');
+
+    const handleInputChange = () => {
+      
+      this.generateVariants();
+    };
+
+    if (valuesInput) {
+      valuesInput.addEventListener('change', handleInputChange);
+    }
+
+    if (nameInput) {
+      nameInput.addEventListener('change', handleInputChange);
+    }
+  }
+
+ 
+  
+
+
 
   // Creates variant field sets based on combinations of the option values
   createVariantCombinations(optionNames, optionValues) {

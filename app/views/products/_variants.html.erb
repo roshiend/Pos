@@ -1,7 +1,22 @@
-<div class="variant-fields">
-  <%= f.label :sku, "SKU" %>
-  <%= f.text_field :sku %>
 
-  <%= f.label :price, "Price" %>
-  <%= f.text_field :price %>
-</div>
+<%#_variants.html.erb%>
+  <div class="variant-fields">
+    <%= f.hidden_field :id %>
+
+    <%= f.label :option1, "Option 1" %>
+    <%= f.text_field :option1, data: { option_index: 0 } %>
+
+    <%= f.label :option2, "Option 2" %>
+    <%= f.text_field :option2, data: { option_index: 1 } %>
+
+    <%= f.label :option3, "Option 3" %>
+    <%= f.text_field :option3, data: { option_index: 2 } %>
+
+    <%= f.label :price, "Price" %>
+    <%= f.number_field :price, step: 0.01 %>
+
+    
+    <button type="button" data-action="click->product-options#removeVariant">Remove Variant</button>
+    <%= f.hidden_field :_destroy, value: false %>
+  </div>
+  
