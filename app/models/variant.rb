@@ -2,7 +2,7 @@ class Variant < ApplicationRecord
   belongs_to :product
   has_many :option_types, through: :product
 
-  validates :sku, presence: true, uniqueness: { scope: :product_id }
+  #validates :sku, presence: true, uniqueness: { scope: :product_id }
   #validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
   before_validation :set_title
   before_create :set_unique_id

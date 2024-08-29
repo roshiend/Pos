@@ -141,23 +141,29 @@ export default class extends NestedForm {
   createVariantCombinations(optionNames, optionValues) {
     const variantsContainer = this.variantsContainerTarget;
     variantsContainer.innerHTML = ""; // Clear existing variants
-
+  
     if (optionValues.length === 0) return;
-
+  
     const combinations = this.generateCombinations(optionValues);
-
+  
     combinations.forEach((combination, index) => {
       const template = this.variantTemplateTarget.content.cloneNode(true);
       const timestamp = new Date().getTime() + index;
-
-      template.querySelectorAll("input").forEach((element, idx) => {
+  
+      // Assuming optionNames corresponds to option1, option2, option3 in the template
+      template.querySelector("input[name*='[option1]']").value = combination[0] || "";
+      template.querySelector("input[name*='[option2]']").value = combination[1] || "";
+      template.querySelector("input[name*='[option3]']").value = combination[2] || "";
+  
+      template.querySelectorAll("input").forEach((element) => {
         element.name = element.name.replace(/TEMPLATE_RECORD/g, timestamp);
-        element.value = combination[idx]; // Assign the combination values to the fields
+        element.id = element.id.replace(/TEMPLATE_RECORD/g, timestamp);
       });
-
+  
       variantsContainer.appendChild(template);
     });
   }
+  
 
   // Recursively generates all combinations of the given arrays of option values
   generateCombinations(arrays, prefix = []) {
