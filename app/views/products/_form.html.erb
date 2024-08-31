@@ -91,17 +91,9 @@
   <% end %>
 
   <div data-product-options-target="target"></div>
-  <button type="button" data-action="product-options#add">Add Option</button>
-  <button type="button" data-action="product-options#addVariant">Add Variant</button>
+  <button type="button" data-action="product-options#addOption">Add Option</button>
   <div data-product-options-target="variantsContainer"></div>
- 
 
-
-   <!-- Loop through existing variants -->
-  <%= form.fields_for :variants do |variant_form| %>
-   <%= render "variants", f: variant_form %>
-  <% end %>
-  
   <template data-product-options-target="variantTemplate">
     <%= form.fields_for :variants, Variant.new, child_index: 'TEMPLATE_RECORD' do |variant_form| %>
       <%= render "variants", f: variant_form %>

@@ -1,6 +1,6 @@
 
 <%#_product_option_fields.html.erb%>
-<div class="product-options-wrapper"">
+<div class="product-options-wrapper">
   <% cache "option_type_list" do %>
       
     <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.name] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control slim-select', id: "product-option-name-select_#{f.index}"  %>
