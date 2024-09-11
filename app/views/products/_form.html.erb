@@ -12,7 +12,7 @@
   window.ListingType = JSON.parse('<%= raw ListingType.all.to_json(only: [:id, :code]) %>');
 </script>
 
-<%= form_with(model: @product, local: true, data: { controller: 'product-options', existing_variants: @product.variants.to_json(only: [:id, :sku, :price, :option1, :option2, :option3,:position]), product_id: @product.id }) do |form| %>
+<%= form_with(model: @product, local: true, data: { controller: 'product-options ', existing_variants: @product.variants.to_json(only: [:id, :sku, :price, :option1, :option2, :option3,:position]), product_id: @product.id }) do |form| %>
 
 
   <% if product.errors.any? %>
@@ -91,18 +91,9 @@
   <% end %>
 
   <div data-product-options-target="target"></div>
-  <button type="button" data-action="product-options#addOption">Add Option</button>
-  <div data-product-options-target="variantsContainer"></div>
-
-  <template data-product-options-target="variantTemplate">
-    <%= form.fields_for :variants, Variant.new, child_index: 'TEMPLATE_RECORD' do |variant_form| %>
-      <%= render "variants", f: variant_form %>
-    <% end %>
-  </template>
- 
-
- 
-
+  <button type="button" data-action="product-options#add">Add Option</button>
+  <div id="variants-container"></div>
+  <div class="variants-container"></div>
 
   <div>
     <%= form.submit %>

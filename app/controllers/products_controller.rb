@@ -38,12 +38,11 @@ class ProductsController < ApplicationController
   end
 
   def create
-    #logger.debug "Product params: #{product_params.inspect}"
-    
+    logger.debug "Product params: #{product_params.inspect}"
+
     @product = Product.new(product_params)
-    #process_option_values(@product)
+    process_option_values
     if @product.save
-      
       redirect_to @product, notice: 'Product was successfully created.'
     else
       logger.debug "Product errors: #{@product.errors.full_messages}"
@@ -55,14 +54,15 @@ class ProductsController < ApplicationController
   
     # PATCH/PUT /products/1 or /products/1.json
     def update
+      logger.debug "Product params before update: #{product_params.inspect}"
       
-     
       respond_to do |format|
-        
         if @product.update(product_params)
+          process_option_values
           format.html { redirect_to @product, notice: 'Product was successfully updated.' }
           format.json { render :show, status: :ok, location: @product }
         else
+          logger.debug "Product errors: #{@product.errors.full_messages}"
           format.html { render :edit }
           format.json { render json: @product.errors, status: :unprocessable_entity }
         end
@@ -96,9 +96,18 @@ class ProductsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:name,:description,:master_price,:product_type_id, :category_id, :sub_category_id, :shop_location_id, :listing_type_id, :vendor_id,variants_attributes: [:id,:option1, :option2, :option3, :sku, :price,:unique_id,:barcode,:position,:title,:_destroy],option_types_attributes:[:id,:name,:_destroy,:position,value:[]])
+      params.require(:product).permit(:name,:description,:master_price,:product_type_id, :category_id, :sub_category_id, :shop_location_id, :listing_type_id, :vendor_id,variants_attributes: [:id,:option1, :option2, :option3, :sku, :price,:unique_id,:barcode,:position,:title,:_destroy],option_types_attributes:[:id,:name,:_destroy,:position,:value])
     end
 
+    # This method ensures that the values are stored as arrays
+    def process_option_values
+      params[:product][:option_types_attributes].each do |index, option_type|
+        if option_type[:value].is_a?(String)
+          # Convert the comma-separated string into an array of values
+          option_type[:value] = option_type[:value].split(',')
+        end
+      end
+    end
     
    
   

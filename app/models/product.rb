@@ -16,36 +16,24 @@ class Product < ApplicationRecord
   accepts_nested_attributes_for :option_types, allow_destroy: true
   accepts_nested_attributes_for :variants, allow_destroy: true
   
-  before_save :check_option_types
-  before_save :ensure_default_variant
+  #before_save :check_option_types
+  before_save :check_variant_options
+ # before_save :ensure_default_variant
 
   private
 
   def check_option_types
     self.option_types.each do |option_type|
-      if option_type.name.blank? || option_type.value.blank? || option_type.value.all? { |v| v.blank? }
+      if option_type.name.blank? || option_type.value.blank? || option_type.value.all?  {  option_type.marked_for_destruction? }
         option_type.mark_for_destruction
       end
     end
   end
 
-  def ensure_default_variant
-    if variants.empty? || all_variants_have_empty_options?
-      unless variants.any? { |v| v.title == 'Default' }
-        variants.build(title: 'Default', sku: generate_default_sku, price: default_price)
-      end
-    end
-  end
-
-  def all_variants_have_empty_options?
+  def check_variant_options
     variants.all? { |variant| variant.option1.blank? && variant.option2.blank? && variant.option3.blank? }
   end
 
-  def generate_default_sku
-    "SKU-#{self.id}-DEFAULT"
-  end
-
-  def default_price
-    self.price || product.master_price
-  end
+ 
 end
+  

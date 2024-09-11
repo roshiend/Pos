@@ -1,132 +1,118 @@
-import SlimSelect from 'slim-select';
 import NestedForm from 'stimulus-rails-nested-form';
+import SlimSelect from 'slim-select';
 
 export default class extends NestedForm {
-  static targets = ["optionTemplate", "variantsContainer", "variantTemplate", "option"];
+  static MAX_FIELDS = 3;  // Define a constant for max fields
 
   connect() {
-    this.element.querySelectorAll('.product-options-wrapper').forEach((field) => {
-      this.addInputEventListeners(field);
-    });
+    super.connect();
+    console.log('Controller loaded!');
 
-    this.updateVariants(); // Initial call to generate variants based on existing selections
+    // Initialize SlimSelect and Tagify on existing elements
+    const existingSelectElements = this.element.querySelectorAll('.product-option-value-select, .product-option-name-select');
+    this.initializeSelectElements(existingSelectElements);
+
+    this.updateAddButtonVisibility();
+
+    // Add event listeners for input changes on all product option wrappers
+    this.element.querySelectorAll('.product-options-wrapper').forEach((field, index) => {
+      this.addInputEventListeners(field, index);
+    });
   }
 
-  initializeSlimSelect(elements) {
+  initializeSelectElements(elements) {
     elements.forEach((element) => {
-      new SlimSelect({
-        select: element,
-        placeholder: "Select",
-        allowDeselect: true,
-        multiple: true,
-        showSearch: false,
-        hideSelectedOption: true
-      });
+      if (element.classList.contains('product-option-value-select')) {
+        // Initialize Tagify for product-option-value-select with freeform tagging
+        new Tagify(element, {
+          enforceWhitelist: false,  // Allow any value to be added
+          maxTags: 10,  // Optional: limit the number of tags
+          dropdown: {
+            enabled: 0 // Disable dropdown entirely
+          },
+          // Ensure that only plain values (strings) are stored
+          transformTag: function(tagData) {
+            return tagData.value;
+          },
+          originalInputValueFormat: function(valuesArr) {
+            // Submit the tags as a comma-separated string
+            return valuesArr.map(item => item.value).join(',');
+          }
+        });
+      } else if (element.classList.contains('product-option-name-select')) {
+        // Initialize SlimSelect for the product-option-name-select dropdown
+        new SlimSelect({
+          select: element,
+          placeholder: "Select Something...",
+          allowDeselect: true,
+          showSearch: true,
+          hideSelectedOption: true,
+        });
+      }
     });
   }
 
-  // Adds a new option field set
-  addOption() {
+  add() {
     const templateContent = this.templateTarget.innerHTML;
-    const visibleExistingFieldsCount = this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').length;
+    const visibleExistingFieldsCount = this.getVisibleFieldsCount();
 
-    if (visibleExistingFieldsCount < 3) {
-      const timestamp = Date.now(); // Gets the current timestamp in milliseconds
-      const newTemplateContent = templateContent.replace(/NEW_RECORD/g, timestamp);
+    if (visibleExistingFieldsCount < this.constructor.MAX_FIELDS) {
+      const newIndex = visibleExistingFieldsCount;
+      const newTemplateContent = templateContent.replace(/NEW_RECORD/g, newIndex);
 
       this.targetTarget.insertAdjacentHTML('beforeend', newTemplateContent);
-      const newField = this.targetTarget.lastElementChild;
-      const selectElements = newField.querySelectorAll('.product-option-value-select, .product-option-name-select');
 
-      this.initializeSlimSelect(selectElements);
-      this.addInputEventListeners(newField);
-      this.updateVariants();
+      const newField = this.targetTarget.lastElementChild;
+      // Initialize Tagify and SlimSelect for the new field
+      const selectElements = newField.querySelectorAll('.product-option-value-select, .product-option-name-select');
+      this.initializeSelectElements(selectElements);
+      this.addInputEventListeners(newField, newIndex);
+
+      this.updateAddButtonVisibility();
     } else {
       console.log('Maximum number of fields reached.');
     }
   }
 
-
-  // Removes an option field set and its associated variants
   remove(event) {
     const wrapper = event.target.closest('.product-options-wrapper');
-    if (wrapper) {
-      wrapper.querySelectorAll('.option-value').forEach((valueField) => {
-        valueField.querySelector('[name*="[_destroy]"]').value = "1";
-        valueField.style.display = 'none';
-      });
 
-      wrapper.querySelector('[name*="[_destroy]"]').value = "1";
+    if (wrapper) {
+      wrapper.querySelector('[name*="[_destroy]"]').value = '1';
       wrapper.style.display = 'none';
-      this.updateVariants();
+
+      this.updateAddButtonVisibility();
     }
   }
 
-  addInputEventListeners(field) {
+  updateAddButtonVisibility() {
+    const visibleFields = this.getVisibleFieldsCount();
+    const addButton = this.element.querySelector('[data-action="product-options#add"]');
+    
+    addButton.style.display = visibleFields < this.constructor.MAX_FIELDS ? 'block' : 'none';
+  }
+
+  addInputEventListeners(field, index) {
     const nameInput = field.querySelector('.product-option-name-select');
     const valuesInput = field.querySelector('.product-option-value-select');
 
-    const handleInputChange = () => {
-      this.updateVariants();
-    };
-
-    if (valuesInput) {
-      valuesInput.addEventListener('change', handleInputChange);
+    if (valuesInput && valuesInput.tagify) {
+      valuesInput.addEventListener('input', () => this.handleInputChange(valuesInput));
     }
 
     if (nameInput) {
-      nameInput.addEventListener('change', handleInputChange);
+      nameInput.addEventListener('change', () => this.handleInputChange(nameInput));
     }
   }
 
-  updateVariants() {
-    const options = [];
-    this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').forEach((wrapper) => {
-      const name = wrapper.querySelector('.product-option-name-select').value;
-      const selectedOptions = Array.from(wrapper.querySelectorAll('.product-option-value-select option:checked')).map(option => option.value).filter(value => value);
-      if (name && selectedOptions.length > 0) {
-        options.push(selectedOptions);
-        console.log(options);
-      }
-    });
-    
-    const combinations = this.generateOptionCombinations(options);
-
-    // Clear current variants
-    this.variantsContainerTarget.innerHTML = '';
-
-    combinations.forEach((combination) => {
-      const variant = document.importNode(this.variantTemplateTarget.content, true);
-      this.applyCombinationToVariant(variant, combination);
-      this.variantsContainerTarget.appendChild(variant);
-    });
+  handleInputChange(inputElement) {
+    if (inputElement.tagify) {
+      const selectedValues = inputElement.tagify.value.map(tag => tag.value);
+      console.log('Selected Tagify values:', selectedValues);
+    } 
   }
 
-  generateOptionCombinations(options) {
-    if (options.length === 0) return [];
-  
-    return options.reduce((acc, curr) => {
-      // Accumulator starts with [[]], so it can correctly build up combinations
-      return acc.flatMap(accItem => curr.map(currItem => accItem.concat([currItem])));
-    }, [[]]);
-  }
-  
-  
-
-  
-
-  applyCombinationToVariant(variant, combination) {
-    const option1 = variant.querySelector('[data-option1="true"]');
-    const option2 = variant.querySelector('[data-option2="true"]');
-    const option3 = variant.querySelector('[data-option3="true"]');
-
-    if (option1) option1.value = combination[0] || '';
-    if (option2) option2.value = combination[1] || '';
-    if (option3) option3.value = combination[2] || '';
-
-    const variantName = variant.querySelector('.variant-name');
-    if (variantName) {
-      variantName.textContent = combination.filter(Boolean).join(' / ');
-    }
+  getVisibleFieldsCount() {
+    return this.element.querySelectorAll('.product-options-wrapper:not([style*="display: none"])').length;
   }
 }

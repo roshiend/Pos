@@ -3,11 +3,11 @@ class OptionType < ApplicationRecord
 
   validates :position, uniqueness: { scope: :product_id }
   validates :name, :value, presence: true
-
+  
   before_create :set_initial_position
   before_update :assign_position_on_update
   before_destroy :rearrange_positions
-
+ 
   private
 
   def set_initial_position
@@ -35,4 +35,6 @@ class OptionType < ApplicationRecord
   def rearrange_positions
     product.option_types.where('position > ?', self.position).update_all('position = position - 1')
   end
+  
+  
 end
