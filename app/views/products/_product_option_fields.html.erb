@@ -2,10 +2,18 @@
   <% cache "option_type_list" do %>
     <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.name] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control slim-select', id: "product-option-name-select_#{f.index}"  %>
     
-    <!-- Changed select to text_field for product-option-value -->
-    <%= f.text_field :value, class: 'product-option-value-text form-control', id: "product-option-value-text_#{f.index}" %>
+    <!-- Hidden input field to store the tag values for submission -->
+    <%= f.hidden_field :value, class: 'product-option-value-hidden', id: "product-option-value-hidden_#{f.index}" %>
 
+    <!-- Container to display the tags and input for entering new tags -->
+    <div class="tag-container" id="tag-container-<%= f.index %>">
+      <!-- Tags will be dynamically inserted here -->
+    </div>
+
+    <!-- Visible input for typing new tags -->
+    <input type="text" class="product-option-value-input form-control" id="product-option-value-input_<%= f.index %>" placeholder="Enter tag and press Enter">
   <% end %>
+  
   <button type="button" data-action="product-options#remove">Remove Option</button>
   <%= f.hidden_field :_destroy, value: false %>
 </div>
