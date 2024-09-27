@@ -1,12 +1,11 @@
 <div class="product-options-wrapper">
   <% cache "option_type_list" do %>
-    <!-- Keep SlimSelect for product-option-name-select -->
     <%= f.select :name, options_for_select(OptionTypeSet.all.map { |option| [option.name, option.name] }, selected: f.object.name), { prompt: 'Select option name' }, class: 'product-option-name-select form-control slim-select', id: "product-option-name-select_#{f.index}"  %>
+    
+    <!-- Changed select to text_field for product-option-value -->
+    <%= f.text_field :value, class: 'product-option-value-text form-control', id: "product-option-value-text_#{f.index}" %>
 
-    <%= f.text_field :value, class: 'product-option-value-select form-control tagify-input',id: "product-option-value-select_#{f.index}"
-    %>
   <% end %>
-  
   <button type="button" data-action="product-options#remove">Remove Option</button>
   <%= f.hidden_field :_destroy, value: false %>
 </div>
